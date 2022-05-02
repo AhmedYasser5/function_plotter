@@ -6,30 +6,30 @@ const char deps[OPS][OPS] = {{'+', '-', '*', '/', '^'},
                              {'*', '/', '^'},
                              {'*', '/', '^'}};
 
-char calc(stack_char **op, stack_double **num) {
+static char calc(stack_char **op, stack_double **num) {
   if (!*op)
     return -1;
   if (!(*num && (*num)->next))
     return -2;
-  double s = pop_double(num);
-  double f = pop_double(num);
-  char operation = pop_char(op);
+  double s = stack_double_pop(num);
+  double f = stack_double_pop(num);
+  char operation = stack_char_pop(op);
   if (operation == '+')
-    push_double(num, f + s);
+    stack_double_push(num, f + s);
   else if (operation == '-')
-    push_double(num, f - s);
+    stack_double_push(num, f - s);
   else if (operation == '*')
-    push_double(num, f * s);
+    stack_double_push(num, f * s);
   else if (operation == '/') {
     if (!isless(s, 0) && !isless(0, s))
       return 1;
-    push_double(num, f / s);
+    stack_double_push(num, f / s);
   } else if (operation == '^')
-    push_double(num, pow(f, s));
+    stack_double_push(num, pow(f, s));
   return 0;
 }
 
-void calc_error(char **message, char err) {
+static void calc_error(char **message, char err) {
   if (err == 1)
     sprintf(*message, "Divide by zero error");
   else if (err == -1)
@@ -40,7 +40,7 @@ void calc_error(char **message, char err) {
     sprintf(*message, "Unknown error");
 }
 
-double parse_number(const char *arr, int *i) {
+double calculator_parse_number(const char *arr, int *i) {
   double y = 0;
   while (arr[*i] && arr[*i] >= '0' && arr[*i] <= '9') {
     y *= 10;
@@ -60,16 +60,16 @@ double parse_number(const char *arr, int *i) {
   return y;
 }
 
-double eval(const char *arr, double x, char *message) {
+double calculator_eval(const char *arr, double x, char *message) {
 #define clear_all()                                                            \
-  clear_char(&op);                                                             \
-  clear_double(&num);
+  stack_char_clear(&op);                                                       \
+  stack_double_clear(&num);
 
   const int size = strlen(arr);
   stack_double *num = NULL;
   stack_char *op = NULL;
-  push_double(&num, 0);
-  push_char(&op, '+');
+  stack_double_push(&num, 0);
+  stack_char_push(&op, '+');
   char last_op = '+';
   for (int i = 0; arr[i]; i++) {
     if (arr[i] == ' ')
@@ -77,7 +77,7 @@ double eval(const char *arr, double x, char *message) {
 
     if (arr[i] == 'x') {
       last_op = 0;
-      push_double(&num, x);
+      stack_double_push(&num, x);
       continue;
     }
 
@@ -121,7 +121,7 @@ double eval(const char *arr, double x, char *message) {
             return -INFINITY;
           }
         }
-        push_char(&op, arr[i]);
+        stack_char_push(&op, arr[i]);
         last_op = arr[i];
         continue;
       } else {
@@ -144,7 +144,7 @@ double eval(const char *arr, double x, char *message) {
     }
 
     int j = (int)fmax(i - THRESHB, 0);
-    double y = parse_number(arr, &i);
+    double y = calculator_parse_number(arr, &i);
     if (arr[i + 1] == '.') {
       int n = sprintf(message, "Two decimal points detected here: ... ");
       for (int js = (int)fmax(i - THRESHB, 0),
@@ -160,7 +160,7 @@ double eval(const char *arr, double x, char *message) {
     if (last_op == 'n')
       y *= -1;
     last_op = 0;
-    push_double(&num, y);
+    stack_double_push(&num, y);
   }
 
   while (op || num->next) {
