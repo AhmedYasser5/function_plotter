@@ -38,6 +38,11 @@ else
 	CXXFLAGS += -O0 -std=c++14
 endif
 
+ifdef GTK
+	maketype := GTK $(maketype)
+	CFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0) -rdynamic
+endif
+
 OUTPUT_OPTION = -I $(INCDIR) -I $(SRCDIR) -I $(BINDIR) -MMD -MP
 
 SRCS := $(wildcard $(SRCDIR)/**/*.cpp)

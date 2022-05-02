@@ -1,5 +1,5 @@
 #!/bin/sh
-C=0; D=0; R=0; T=0; A=0
+C=0; D=0; R=0; T=0; A=0; G=0
 if [ "${1:0:1}" == "-" ]; then
 	i=1
 	while [ "${1:${i}:1}" ]; do
@@ -9,6 +9,7 @@ if [ "${1:0:1}" == "-" ]; then
 		elif [ "$CHAR" == "r" ]; then R=1
 		elif [ "$CHAR" == "t" ]; then T=1
 		elif [ "$CHAR" == "a" ]; then A=1
+		elif [ "$CHAR" == "g" ]; then G=1
 		else
 			printf "This program compiles c/cpp files using make and runs the\
  executable file while calculating the elapsed time\n
@@ -19,6 +20,7 @@ Note: In the case of using more than one parameter, concatenate them (i.e.\
   -r\tbuilds using release configurations
   -d\tbuilds using debug configurations, and runs the debugger
   -t\tbuilds using threads configurations
+  -g\tbuilds using gtk4 configurations
   -a\tsends the following parameters as arguments to main function
   -h\tshows this help message"
 			exit 0
@@ -31,16 +33,16 @@ if [ $C -eq 1 ]; then
 	make clean
 fi
 if [ $D -eq 1 ]; then
-	make DEBUG=1 all
+	make DEBUG=1 GTK=$G all
 	make debug
 	exit 0
 fi
 if [ $R -eq 1 ]; then
-	make RELEASE=1 all
+	make RELEASE=1 GTK=$G all
 elif [ $T -eq 1 ]; then
-	make THREADS=1 all
+	make THREADS=1 GTK=$G all
 else
-	make all
+	make GTK=$G all
 fi
 if [ $A -eq 0 ]; then
 	shift $#
