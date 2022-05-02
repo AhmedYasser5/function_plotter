@@ -10,6 +10,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#define MAX_LABEL_SIZE 128
 #define PRECISION 0.05
 
 GtkWidget *window;
@@ -94,53 +95,61 @@ gboolean on_graph_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   return FALSE;
 }
 
-void on_draw_clicked(GtkButton *draw) {
+static gboolean atolf(const gchar *snum, double *num) {
   int i = 0;
+  if (snum[0] == '-' || snum[0] == '+')
+    i++;
+  *num = calculator_parse_number(snum, &i);
+  if (snum[0] == '-')
+    *num *= -1;
+  return snum[i + 1] == '\0';
+}
+
+static gboolean set_min_max() {
   const gchar *tmp = gtk_entry_get_text(GTK_ENTRY(min));
-  if (tmp[0] == '-' || tmp[0] == '+')
-    i++;
-  minX = parse_number(tmp, &i);
-  if (tmp[0] == '-')
-    minX *= -1;
-  i = 0;
+  if (!atolf(tmp, &minX)) {
+    gtk_label_set_text(GTK_LABEL(errors), "Invalid Minimum x");
+    return FALSE;
+  }
   tmp = gtk_entry_get_text(GTK_ENTRY(max));
-  if (tmp[0] == '-' || tmp[0] == '+')
-    i++;
-  maxX = parse_number(tmp, &i);
-  if (tmp[0] == '-')
-    maxX *= -1;
-  if (isless(maxX, minX))
-    return;
+  if (!atolf(tmp, &maxX)) {
+    gtk_label_set_text(GTK_LABEL(errors), "Invalid Maximum x");
+    return FALSE;
+  }
+  if (isless(maxX, minX)) {
+    gtk_label_set_text(GTK_LABEL(errors),
+                       "Minimum x should be less than Maximum x");
+    return FALSE;
+  }
   printf("min = %lf, max = %lf\n", minX, maxX);
+  return TRUE;
+}
+
+void on_draw_clicked(GtkButton *draw) {
+  if (!set_min_max())
+    return;
   const gchar *eq = gtk_entry_get_text(GTK_ENTRY(equation));
   printf("equation = %s\n", eq);
   gdouble step = PRECISION * (maxX - minX) / 800, cur = minX;
   maxY = -INFINITY;
   minY = INFINITY;
-  clear_double(&x);
-  clear_double(&y);
+  stack_double_clear(&x);
+  stack_double_clear(&y);
+  gchar *tmp = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE);
   while (!isless(maxX, cur)) {
-    push_double(&x, cur);
-    gchar *tmp = eval(eq, cur);
-    if ((tmp[0] >= 'A' && tmp[0] <= 'Z') || (tmp[0] >= 'a' && tmp[0] <= 'z')) {
-      gtk_label_set_text(GTK_LABEL(errors), tmp);
+    stack_double_push(&x, cur);
+    stack_double_push(&y, calculator_eval(eq, cur, tmp));
+    gtk_label_set_text(GTK_LABEL(errors), tmp);
+    if (tmp[0] != '\0') {
       free(tmp);
       return;
     }
-    gtk_label_set_text(GTK_LABEL(errors), "");
-    i = 0;
-    if (tmp[0] == '-')
-      i++;
-    gdouble ans = parse_number(tmp, &i);
-    if (tmp[0] == '-')
-      ans *= -1;
-    push_double(&y, ans);
-    free(tmp);
     minY = fmin(minY, y->top);
     maxY = fmax(maxY, y->top);
     // printf("(%lf, %lf) ", cur, y->top);
     cur += step;
   }
+  free(tmp);
   if (!isless(minY, maxY) && !isless(maxY, minY)) {
     minY--;
     maxY++;
