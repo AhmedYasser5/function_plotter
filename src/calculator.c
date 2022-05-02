@@ -60,13 +60,12 @@ double parse_number(const char *arr, int *i) {
   return y;
 }
 
-char *eval(char arr[MAX], double x) {
-#define end()                                                                  \
+double eval(const char *arr, double x, char *message) {
+#define clear_all()                                                            \
   clear_char(&op);                                                             \
-  clear_double(&num);                                                          \
-  return message;
+  clear_double(&num);
 
-  char *message = (char *)malloc(sizeof(char) * MAX);
+  const int size = strlen(arr);
   stack_double *num = NULL;
   stack_char *op = NULL;
   push_double(&num, 0);
@@ -91,10 +90,18 @@ char *eval(char arr[MAX], double x) {
     if (type) {
       if ((arr[i] != '-' && last_op) ||
           (arr[i] == '-' && (arr[i + 1] == '-' || last_op == '-'))) {
-        arr[(int)fmin(MAX - 1, i + THRESHF)] = '\0';
-        sprintf(message, "Double operations detected here: ... %s ...",
-                arr + (int)fmax(0, i - 1 - THRESHB));
-        end();
+        int n =
+            sprintf(message, "Double operations detected \"%c%c\" here: ... ",
+                    last_op, arr[i]);
+        for (int js = (int)fmax(i - 1 - THRESHB, 0),
+                 je = (int)fmin(size - 1, i + THRESHF - 1);
+             js <= je; js++) {
+          sprintf(message + n, "%c", arr[js]);
+          n++;
+        }
+        sprintf(message + n, " ...");
+        clear_all();
+        return -INFINITY;
       }
       if (!last_op) {
         type--;
@@ -110,7 +117,8 @@ char *eval(char arr[MAX], double x) {
           char ret;
           if (ret = calc(&op, &num)) {
             calc_error(&message, ret);
-            end();
+            clear_all();
+            return -INFINITY;
           }
         }
         push_char(&op, arr[i]);
@@ -123,33 +131,50 @@ char *eval(char arr[MAX], double x) {
     }
 
     if (arr[i] != '.' && (arr[i] < '0' || arr[i] > '9')) {
-      arr[(int)fmin(i + THRESHF, MAX - 1)] = '\0';
-      sprintf(message, "Undefined character '%c' here: ... %s ...", arr[i],
-              arr + (int)fmax(i - THRESHB, 0));
-      end();
+      int n = sprintf(message, "Undefined character '%c' here: ... ", arr[i]);
+      for (int js = (int)fmax(i - THRESHB, 0),
+               je = (int)fmin(size - 1, i + THRESHF);
+           js <= je; js++) {
+        sprintf(message + n, "%c", arr[js]);
+        n++;
+      }
+      sprintf(message + n, " ...");
+      clear_all();
+      return -INFINITY;
     }
 
     int j = (int)fmax(i - THRESHB, 0);
     double y = parse_number(arr, &i);
     if (arr[i + 1] == '.') {
-      arr[(int)fmin(i + THRESHF, MAX - 1)] = '\0';
-      sprintf(message, "Two decimal points detected here: ... %s ...", arr + j);
-      end();
+      int n = sprintf(message, "Two decimal points detected here: ... ");
+      for (int js = (int)fmax(i - THRESHB, 0),
+               je = (int)fmin(size - 1, i + THRESHF);
+           js <= je; js++) {
+        sprintf(message + n, "%c", arr[js]);
+        n++;
+      }
+      sprintf(message + n, " ...");
+      clear_all();
+      return -INFINITY;
     }
     if (last_op == 'n')
       y *= -1;
     last_op = 0;
     push_double(&num, y);
   }
+
   while (op || num->next) {
     char ret;
     if (ret = calc(&op, &num)) {
       calc_error(&message, ret);
-      end();
+      clear_all();
+      return -INFINITY;
     }
   }
-  printf("%lf", num->top);
+
+  double ans = num->top;
   sprintf(message, "");
-  end();
+  clear_all();
+  return ans;
 #undef end
 }
