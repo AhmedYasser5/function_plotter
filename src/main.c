@@ -137,7 +137,7 @@ void on_draw_clicked(GtkButton *draw) {
   while (isgreaterequal(maxX, cur)) {
     stack_double_push(&x, cur);
     stack_double_push(&y, calculator_eval(eq, cur, tmp));
-    if (tmp[0] != '\0' || isnan(y->top) || isinf(y->top)) {
+    if (isnan(y->top)) {
       y->top = 0;
       gtk_label_set_text(GTK_LABEL(errors), tmp);
       stack_double_push(&opacity, 0);
