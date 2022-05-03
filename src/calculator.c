@@ -24,20 +24,25 @@ static char calc(stack_char **op, stack_double **num) {
     if (isless(fabs(s), EPSILON))
       return 1;
     stack_double_push(num, f / s);
-  } else if (operation == '^')
+  } else if (operation == '^') {
     stack_double_push(num, pow(f, s));
+    if (isnan((*num)->top))
+      return 2;
+  }
   return 0;
 }
 
 static void calc_error(char **message, char err) {
-  if (err == 1)
-    sprintf(*message, "Divide by zero error");
+  if (err == -2)
+    sprintf(*message, "Extra operations detected");
   else if (err == -1)
     sprintf(*message, "Extra numbers detected");
-  else if (err == -2)
-    sprintf(*message, "Extra operations detected");
+  else if (err == 1)
+    sprintf(*message, "Divide by zero detected");
+  else if (err == 2)
+    sprintf(*message, "Fractional power with negative numbers detected");
   else
-    sprintf(*message, "Unknown error");
+    sprintf(*message, "Unknown error detected");
 }
 
 double calculator_parse_number(const char *arr, int *i) {
@@ -101,7 +106,7 @@ double calculator_eval(const char *arr, double x, char *message) {
         }
         sprintf(message + n, " ...");
         clear_all();
-        return -INFINITY;
+        return NAN;
       }
       if (!last_op) {
         type--;
@@ -118,7 +123,7 @@ double calculator_eval(const char *arr, double x, char *message) {
           if (ret = calc(&op, &num)) {
             calc_error(&message, ret);
             clear_all();
-            return -INFINITY;
+            return NAN;
           }
         }
         stack_char_push(&op, arr[i]);
@@ -140,7 +145,7 @@ double calculator_eval(const char *arr, double x, char *message) {
       }
       sprintf(message + n, " ...");
       clear_all();
-      return -INFINITY;
+      return NAN;
     }
 
     int j = (int)fmax(i - THRESHB, 0);
@@ -155,7 +160,7 @@ double calculator_eval(const char *arr, double x, char *message) {
       }
       sprintf(message + n, " ...");
       clear_all();
-      return -INFINITY;
+      return NAN;
     }
     if (last_op == 'n')
       y *= -1;
@@ -168,7 +173,7 @@ double calculator_eval(const char *arr, double x, char *message) {
     if (ret = calc(&op, &num)) {
       calc_error(&message, ret);
       clear_all();
-      return -INFINITY;
+      return NAN;
     }
   }
 
