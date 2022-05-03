@@ -1,17 +1,12 @@
+#define EPSILON 0.05
+
 #include "calculator.h"
-#include <ctype.h>
 #include <gtk/gtk.h>
 #include <math.h>
-#include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
 
 #define MAX_LABEL_SIZE 128
-#define PRECISION 0.05
 
 GtkWidget *window;
 GtkWidget *fixed;
@@ -23,7 +18,7 @@ GtkWidget *equation;
 GtkWidget *errors;
 
 gdouble minX, maxX, minY, maxY;
-stack_double *x, *y;
+stack_double *x, *y, *opacity;
 
 void on_destroy();
 
@@ -76,11 +71,11 @@ gboolean on_graph_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
     return FALSE;
 
   cairo_set_line_width(cr, 3.0);
-  cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
 
-  stack_double *curX = x, *curY = y;
+  stack_double *curX = x, *curY = y, *curOpacity = opacity;
 
   while (curX->next != NULL) {
+    cairo_set_source_rgba(cr, 1.0, 0.0, 0.0, curOpacity->top);
     cairo_move_to(cr, convert_to_display(curX->top, &minX, &maxX, &width),
                   height -
                       convert_to_display(curY->top, &minY, &maxY, &height));
@@ -90,6 +85,7 @@ gboolean on_graph_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
     cairo_stroke(cr);
     curX = curX->next;
     curY = curY->next;
+    curOpacity = curOpacity->next;
   }
 
   return FALSE;
@@ -130,27 +126,30 @@ void on_draw_clicked(GtkButton *draw) {
     return;
   const gchar *eq = gtk_entry_get_text(GTK_ENTRY(equation));
   printf("equation = %s\n", eq);
-  gdouble step = PRECISION * (maxX - minX) / 800, cur = minX;
+  gdouble step = EPSILON * (maxX - minX) / 800, cur = minX;
   maxY = -INFINITY;
   minY = INFINITY;
   stack_double_clear(&x);
   stack_double_clear(&y);
+  stack_double_clear(&opacity);
+  gtk_label_set_text(GTK_LABEL(errors), "");
   gchar *tmp = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE);
-  while (!isless(maxX, cur)) {
+  while (isgreaterequal(maxX, cur)) {
     stack_double_push(&x, cur);
     stack_double_push(&y, calculator_eval(eq, cur, tmp));
-    gtk_label_set_text(GTK_LABEL(errors), tmp);
-    if (tmp[0] != '\0') {
-      free(tmp);
-      return;
-    }
+    if (tmp[0] != '\0' || isnan(y->top) || isinf(y->top)) {
+      y->top = 0;
+      gtk_label_set_text(GTK_LABEL(errors), tmp);
+      stack_double_push(&opacity, 0);
+    } else
+      stack_double_push(&opacity, 1);
     minY = fmin(minY, y->top);
     maxY = fmax(maxY, y->top);
     // printf("(%lf, %lf) ", cur, y->top);
     cur += step;
   }
   free(tmp);
-  if (!isless(minY, maxY) && !isless(maxY, minY)) {
+  if (isgreaterequal(minY, maxY) && isgreaterequal(maxY, minY)) {
     minY--;
     maxY++;
   }
