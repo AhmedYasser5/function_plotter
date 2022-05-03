@@ -21,7 +21,7 @@ static char calc(stack_char **op, stack_double **num) {
   else if (operation == '*')
     stack_double_push(num, f * s);
   else if (operation == '/') {
-    if (!isless(s, 0) && !isless(0, s))
+    if (isless(fabs(s), EPSILON))
       return 1;
     stack_double_push(num, f / s);
   } else if (operation == '^')

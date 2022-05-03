@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef EPSILON
+#define EPSILON 0.05
+#endif
+
 #define OPS 5
 #define THRESHF 5
 #define THRESHB 5
