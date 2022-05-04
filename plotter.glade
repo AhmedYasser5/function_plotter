@@ -4,10 +4,15 @@
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkWindow" id="window">
     <property name="can-focus">False</property>
+    <property name="tooltip-text" translatable="yes">Function Plotter</property>
+    <property name="title" translatable="yes">Function Plotter</property>
+    <property name="resizable">False</property>
+    <property name="window-position">center</property>
+    <property name="gravity">center</property>
     <child>
       <object class="GtkFixed" id="fixed">
         <property name="width-request">800</property>
-        <property name="height-request">720</property>
+        <property name="height-request">770</property>
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <child>
@@ -16,37 +21,40 @@
             <property name="height-request">600</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="tooltip-text" translatable="yes">The equation will be drawn here</property>
             <signal name="draw" handler="on_graph_draw" swapped="no"/>
           </object>
         </child>
         <child>
-          <object class="GtkEntry" id="min">
+          <object class="GtkEntry" id="min_x">
             <property name="width-request">170</property>
             <property name="height-request">40</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="tooltip-text" translatable="yes">Minimum value of x for drawing</property>
             <property name="caps-lock-warning">False</property>
             <property name="placeholder-text" translatable="yes">Minimum x</property>
             <property name="input-purpose">number</property>
           </object>
           <packing>
             <property name="x">20</property>
-            <property name="y">610</property>
+            <property name="y">660</property>
           </packing>
         </child>
         <child>
-          <object class="GtkEntry" id="max">
+          <object class="GtkEntry" id="max_x">
             <property name="width-request">170</property>
             <property name="height-request">40</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="tooltip-text" translatable="yes">Maximum value of x for drawing</property>
             <property name="caps-lock-warning">False</property>
             <property name="placeholder-text" translatable="yes">Maximum x</property>
             <property name="input-purpose">number</property>
           </object>
           <packing>
-            <property name="x">610</property>
-            <property name="y">610</property>
+            <property name="x">200</property>
+            <property name="y">660</property>
           </packing>
         </child>
         <child>
@@ -55,11 +63,12 @@
             <property name="height-request">40</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="tooltip-text" translatable="yes">Type the equation to be drawn here</property>
             <property name="placeholder-text" translatable="yes">Equation in x</property>
           </object>
           <packing>
             <property name="x">20</property>
-            <property name="y">660</property>
+            <property name="y">710</property>
           </packing>
         </child>
         <child>
@@ -70,31 +79,64 @@
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
+            <property name="tooltip-text" translatable="yes">Click on this button to draw the equation</property>
             <signal name="clicked" handler="on_draw_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="x">710</property>
-            <property name="y">660</property>
+            <property name="y">710</property>
           </packing>
         </child>
         <child>
           <object class="GtkLabel" id="errors">
-            <property name="width-request">400</property>
+            <property name="width-request">760</property>
             <property name="height-request">40</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="tooltip-text" translatable="yes">Any errors will be shown here</property>
             <property name="wrap">True</property>
-            <property name="selectable">True</property>
             <attributes>
-              <attribute name="font-desc" value="Sans 11"/>
+              <attribute name="font-desc" value="Sans 13"/>
               <attribute name="style" value="normal"/>
               <attribute name="weight" value="semibold"/>
               <attribute name="foreground" value="#ffff00000000"/>
             </attributes>
           </object>
           <packing>
-            <property name="x">200</property>
+            <property name="x">20</property>
             <property name="y">610</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkEntry" id="min_y">
+            <property name="width-request">170</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="tooltip-text" translatable="yes">Minimum value of y for drawing. Leave empty if you want to set it to auto</property>
+            <property name="caps-lock-warning">False</property>
+            <property name="placeholder-text" translatable="yes">Minimum y</property>
+            <property name="input-purpose">number</property>
+          </object>
+          <packing>
+            <property name="x">430</property>
+            <property name="y">660</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkEntry" id="max_y">
+            <property name="width-request">170</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="tooltip-text" translatable="yes">Maximum value of y for drawing. Leave empty if you want to set it to auto</property>
+            <property name="caps-lock-warning">False</property>
+            <property name="placeholder-text" translatable="yes">Maximum y</property>
+            <property name="input-purpose">number</property>
+          </object>
+          <packing>
+            <property name="x">610</property>
+            <property name="y">660</property>
           </packing>
         </child>
       </object>
