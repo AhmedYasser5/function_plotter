@@ -1,12 +1,18 @@
 #include "calculator.h"
+#include "stack.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+#define OPS 5
 const char ops[OPS] = {'+', '-', '*', '/', '^'};
 const char deps[OPS][OPS] = {{'+', '-', '*', '/', '^'},
                              {'+', '-', '*', '/', '^'},
                              {'*', '/', '^'},
                              {'*', '/', '^'}};
 
-static char calc(stack_char **op, stack_double **num) {
+char calc(stack_char **op, stack_double **num) {
   if (!*op)
     return -1;
   if (!(*num && (*num)->next))
@@ -32,7 +38,7 @@ static char calc(stack_char **op, stack_double **num) {
   return 0;
 }
 
-static void calc_error(char **message, char err) {
+char calc_error(char **message, char err) {
   if (err == -2)
     sprintf(*message, "Extra operations detected");
   else if (err == -1)
@@ -43,9 +49,11 @@ static void calc_error(char **message, char err) {
     sprintf(*message, "Fractional power with negative numbers detected");
   else
     sprintf(*message, "Unknown error detected");
+  fprintf(stderr, "%d\n", err);
+  return err;
 }
 
-double calculator_parse_number(const char *arr, int *i) {
+double parse_number(const char *arr, int *i) {
   double y = 0;
   while (arr[*i] && arr[*i] >= '0' && arr[*i] <= '9') {
     y *= 10;
@@ -63,6 +71,20 @@ double calculator_parse_number(const char *arr, int *i) {
   }
   (*i)--;
   return y;
+}
+
+double calculator_atolf(const char *snum) {
+  if (snum[0] == '\0')
+    return NAN;
+  int i = 0;
+  if (snum[0] == '-' || snum[0] == '+')
+    i++;
+  double num = parse_number(snum, &i);
+  if (snum[0] == '-')
+    num *= -1;
+  if (snum[i + 1] == '\0')
+    return num;
+  return NAN;
 }
 
 double calculator_eval(const char *arr, double x, char *message) {
@@ -105,6 +127,7 @@ double calculator_eval(const char *arr, double x, char *message) {
           n++;
         }
         sprintf(message + n, " ...");
+        fprintf(stderr, "3\n");
         clear_all();
         return NAN;
       }
@@ -144,12 +167,13 @@ double calculator_eval(const char *arr, double x, char *message) {
         n++;
       }
       sprintf(message + n, " ...");
+      fprintf(stderr, "4\n");
       clear_all();
       return NAN;
     }
 
     int j = (int)fmax(i - THRESHB, 0);
-    double y = calculator_parse_number(arr, &i);
+    double y = parse_number(arr, &i);
     if (arr[i + 1] == '.') {
       int n = sprintf(message, "Two decimal points detected here: ... ");
       for (int js = (int)fmax(i - THRESHB, 0),
@@ -159,6 +183,7 @@ double calculator_eval(const char *arr, double x, char *message) {
         n++;
       }
       sprintf(message + n, " ...");
+      fprintf(stderr, "5\n");
       clear_all();
       return NAN;
     }
