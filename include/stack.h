@@ -1,7 +1,4 @@
-#ifndef STACK_HEADER
-#define STACK_HEADER
-
-#include <stdlib.h>
+#pragma once
 
 typedef struct stack_char {
   char top;
@@ -19,4 +16,10 @@ void stack_double_push(stack_double **st, double val);
 double stack_double_pop(stack_double **st);
 void stack_double_clear(stack_double **st);
 
-#endif
+typedef struct stack_point {
+  double top_x, top_y;
+  struct stack_point *next;
+} stack_point;
+void stack_point_push(stack_point **st, double x, double y);
+void stack_point_pop(stack_point **st);
+void stack_point_clear(stack_point **st);
