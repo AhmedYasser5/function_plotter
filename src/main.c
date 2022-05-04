@@ -149,7 +149,8 @@ void on_draw_clicked(GtkButton *draw) {
   gtk_label_set_text(GTK_LABEL(errors), "");
   gchar *tmp = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE);
   while (isgreaterequal(maxX, cur)) {
-    stack_point_push(&p, cur, calculator_eval(eq, cur, tmp));
+    stack_point_push(&p, cur, NAN);
+    calculator_eval(eq, cur, &p->top_y, tmp);
     if (isnan(p->top_y) || (!isMinYNan && isless(p->top_y, minY) ||
                             (!isMaxYNan && isless(maxY, p->top_y)))) {
       p->top_y = NAN;
