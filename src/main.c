@@ -82,6 +82,7 @@ static gboolean mouse_tracking(GtkWidget *widget) {
   gdouble y, x = convert_from_display(helperX, &minX, &maxX, WIDTH);
   if (calculator_eval(eq, x, &y, message)) {
     gtk_label_set_text(GTK_LABEL(messages), message);
+    free(message);
     return FALSE;
   }
   sprintf(message, "(x, y) = (%lf, %lf)", x, y);
