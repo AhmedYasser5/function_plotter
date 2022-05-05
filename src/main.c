@@ -13,13 +13,17 @@
 #define PRECISION 0.05
 
 #define MAX_LABEL_SIZE 128
-#define WIDTH 800
-#define HEIGHT 600
+#define WIDTH 800.0
+#define HEIGHT 600.0
+#define HELPER_HEIGHT 30.0
 
-GtkWidget *window, *fixed, *graph, *draw, *min_x, *max_x, *min_y, *max_y,
-    *equation, *errors;
+GtkWidget *window, *fixed, *graph, *helper, *draw, *min_x, *max_x, *min_y,
+    *max_y, *equation, *messages;
 
-gdouble minX, maxX, minY, maxY;
+gdouble minX, maxX, minY, maxY, helperX = WIDTH / 2.0;
+
+gchar eq[MAX_LABEL_SIZE];
+
 stack_point *p;
 
 void on_destroy() { gtk_main_quit(); }
@@ -37,13 +41,14 @@ int main(int argc, char *argv[]) {
 
   fixed = GTK_WIDGET(gtk_builder_get_object(builder, "fixed"));
   graph = GTK_WIDGET(gtk_builder_get_object(builder, "graph"));
+  helper = GTK_WIDGET(gtk_builder_get_object(builder, "helper"));
   draw = GTK_WIDGET(gtk_builder_get_object(builder, "draw"));
   min_x = GTK_WIDGET(gtk_builder_get_object(builder, "min_x"));
   max_x = GTK_WIDGET(gtk_builder_get_object(builder, "max_x"));
   min_y = GTK_WIDGET(gtk_builder_get_object(builder, "min_y"));
   max_y = GTK_WIDGET(gtk_builder_get_object(builder, "max_y"));
   equation = GTK_WIDGET(gtk_builder_get_object(builder, "equation"));
-  errors = GTK_WIDGET(gtk_builder_get_object(builder, "errors"));
+  messages = GTK_WIDGET(gtk_builder_get_object(builder, "messages"));
 
   g_object_unref(builder);
 
@@ -62,9 +67,84 @@ static gdouble convert_to_display(gdouble p, const gdouble *min,
   return p;
 }
 
+static gdouble convert_from_display(gdouble p, const gdouble *min,
+                                    const gdouble *max, const guint len) {
+  p *= *max - *min;
+  p /= len;
+  p += *min;
+  return p;
+}
+
+static gboolean mouse_tracking(GtkWidget *widget) {
+  if (p == NULL)
+    return FALSE;
+  char *message = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE);
+  gdouble y, x = convert_from_display(helperX, &minX, &maxX, WIDTH);
+  if (calculator_eval(eq, x, &y, message)) {
+    gtk_label_set_text(GTK_LABEL(messages), message);
+    return FALSE;
+  }
+  sprintf(message, "(x, y) = (%lf, %lf)", x, y);
+  gtk_label_set_text(GTK_LABEL(messages), message);
+  free(message);
+  gtk_widget_queue_draw(widget);
+  return TRUE;
+}
+
+gboolean on_helper_button_press_event(GtkWidget *widget, GdkEventButton *event,
+                                      gpointer data) {
+  if (event->button != 1)
+    return FALSE;
+  helperX = event->x;
+  return mouse_tracking(widget);
+}
+
+gboolean on_graph_button_press_event(GtkWidget *widget, GdkEventButton *event,
+                                     gpointer data) {
+  if (event->button != 1)
+    return FALSE;
+  helperX = event->x;
+  return mouse_tracking(helper);
+}
+
+gboolean on_helper_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
+                                       gpointer data) {
+  if (!(event->state & GDK_BUTTON1_MASK))
+    return FALSE;
+  helperX = event->x;
+  return mouse_tracking(widget);
+}
+
+gboolean on_graph_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
+                                      gpointer data) {
+  if (!(event->state & GDK_BUTTON1_MASK))
+    return FALSE;
+  helperX = event->x;
+  return mouse_tracking(helper);
+}
+
+gboolean on_helper_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
+  if (isnan(helperX))
+    return FALSE;
+  cairo_set_line_width(cr, LINE_WIDTH);
+  cairo_set_source_rgb(cr, 1 - RED, 1 - GREEN, 1 - BLUE);
+  cairo_move_to(cr, helperX, HELPER_HEIGHT);
+  cairo_line_to(cr, helperX, HELPER_HEIGHT / 3.0);
+  cairo_stroke(cr);
+  gdouble dx = HELPER_HEIGHT / (3 * tan(M_PI / 3.0));
+  cairo_move_to(cr, helperX, 0);
+  cairo_line_to(cr, helperX - dx, HELPER_HEIGHT / 3.0);
+  cairo_line_to(cr, helperX + dx, HELPER_HEIGHT / 3.0);
+  cairo_close_path(cr);
+  cairo_fill(cr);
+  return TRUE;
+}
+
 gboolean on_graph_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   if (p == NULL)
     return FALSE;
+
+  // Don't do this!!!: gtk_widget_queue_draw(helper);
 
   cairo_set_line_width(cr, LINE_WIDTH);
   cairo_set_source_rgb(cr, RED, GREEN, BLUE);
@@ -119,7 +199,7 @@ static char set_min_max(GtkWidget *min, GtkWidget *max, gdouble *min_co,
       sprintf(message, "Invalid Maximum %c", c);
     else
       sprintf(message, "Minimum %c should be less than Maximum %c", c, c);
-    gtk_label_set_text(GTK_LABEL(errors), message);
+    gtk_label_set_text(GTK_LABEL(messages), message);
     free(message);
   }
   return state;
@@ -138,15 +218,15 @@ void on_draw_clicked(GtkButton *draw) {
     isMaxYNan = TRUE;
     maxY = -INFINITY;
   }
-  const gchar *eq = gtk_entry_get_text(GTK_ENTRY(equation));
+  strcpy(eq, gtk_entry_get_text(GTK_ENTRY(equation)));
   printf("equation = %s\n", eq);
   if (!strcmp(eq, "")) {
-    gtk_label_set_text(GTK_LABEL(errors), "Equation cannot be empty");
+    gtk_label_set_text(GTK_LABEL(messages), "Equation cannot be empty");
     return;
   }
   gdouble step = PRECISION * (maxX - minX) / WIDTH, cur = minX;
   stack_point_clear(&p);
-  gtk_label_set_text(GTK_LABEL(errors), "");
+  gtk_label_set_text(GTK_LABEL(messages), "");
   gchar *tmp = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE);
   while (isgreaterequal(maxX, cur)) {
     stack_point_push(&p, cur, NAN);
@@ -154,7 +234,7 @@ void on_draw_clicked(GtkButton *draw) {
     if (isnan(p->top_y) || (!isMinYNan && isless(p->top_y, minY) ||
                             (!isMaxYNan && isless(maxY, p->top_y)))) {
       p->top_y = NAN;
-      gtk_label_set_text(GTK_LABEL(errors), tmp);
+      gtk_label_set_text(GTK_LABEL(messages), tmp);
     } else {
       if (isMinYNan)
         minY = fmin(minY, p->top_y);

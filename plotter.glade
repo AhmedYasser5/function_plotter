@@ -12,7 +12,7 @@
     <child>
       <object class="GtkFixed" id="fixed">
         <property name="width-request">800</property>
-        <property name="height-request">770</property>
+        <property name="height-request">800</property>
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <child>
@@ -21,8 +21,11 @@
             <property name="height-request">600</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="tooltip-text" translatable="yes">The equation will be drawn here</property>
+            <property name="events">GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+            <property name="tooltip-text" translatable="yes">The equation will be drawn here. Touch any point to get its coordinates on the drawn graph</property>
+            <signal name="button-press-event" handler="on_graph_button_press_event" swapped="no"/>
             <signal name="draw" handler="on_graph_draw" swapped="no"/>
+            <signal name="motion-notify-event" handler="on_graph_motion_notify_event" swapped="no"/>
           </object>
         </child>
         <child>
@@ -38,7 +41,7 @@
           </object>
           <packing>
             <property name="x">20</property>
-            <property name="y">660</property>
+            <property name="y">690</property>
           </packing>
         </child>
         <child>
@@ -54,7 +57,7 @@
           </object>
           <packing>
             <property name="x">200</property>
-            <property name="y">660</property>
+            <property name="y">690</property>
           </packing>
         </child>
         <child>
@@ -68,7 +71,7 @@
           </object>
           <packing>
             <property name="x">20</property>
-            <property name="y">710</property>
+            <property name="y">740</property>
           </packing>
         </child>
         <child>
@@ -84,16 +87,16 @@
           </object>
           <packing>
             <property name="x">710</property>
-            <property name="y">710</property>
+            <property name="y">740</property>
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="errors">
+          <object class="GtkLabel" id="messages">
             <property name="width-request">760</property>
             <property name="height-request">40</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="tooltip-text" translatable="yes">Any errors will be shown here</property>
+            <property name="tooltip-text" translatable="yes">Any messages will be shown here</property>
             <property name="wrap">True</property>
             <attributes>
               <attribute name="font-desc" value="Sans 13"/>
@@ -104,7 +107,7 @@
           </object>
           <packing>
             <property name="x">20</property>
-            <property name="y">610</property>
+            <property name="y">640</property>
           </packing>
         </child>
         <child>
@@ -120,7 +123,7 @@
           </object>
           <packing>
             <property name="x">430</property>
-            <property name="y">660</property>
+            <property name="y">690</property>
           </packing>
         </child>
         <child>
@@ -136,7 +139,23 @@
           </object>
           <packing>
             <property name="x">610</property>
-            <property name="y">660</property>
+            <property name="y">690</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkDrawingArea" id="helper">
+            <property name="width-request">800</property>
+            <property name="height-request">30</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="events">GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+            <property name="tooltip-text" translatable="yes">Touch any point to get its coordinates on the drawn graph</property>
+            <signal name="button-press-event" handler="on_helper_button_press_event" swapped="no"/>
+            <signal name="draw" handler="on_helper_draw" swapped="no"/>
+            <signal name="motion-notify-event" handler="on_helper_motion_notify_event" swapped="no"/>
+          </object>
+          <packing>
+            <property name="y">600</property>
           </packing>
         </child>
       </object>
