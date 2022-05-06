@@ -67,7 +67,7 @@ init :
 	@mkdir -p $(SRCDIR) $(INCDIR) $(OBJDIR) $(DEPDIR)
 	-@for i in $(wildcard *.cpp) $(wildcard *.c) $(wildcard *.tpp); do mv ./$$i $(SRCDIR)/$$i; done
 	-@for i in $(wildcard *.h); do mv ./$$i $(INCDIR)/$$i; done
-	-@echo -e "-DDEBUG$(foreach i,$(MY_PATHS),\n-I$(i))" >| src/.clang_complete
+	-@echo -e "-DDEBUG$(foreach i,$(MY_PATHS),\n-I../$(i))" >| src/.clang_complete
 	-@cp /home/ahmed/opt/compile_and_run.sh ./
 
 $(TARGET): $(OBJS)
