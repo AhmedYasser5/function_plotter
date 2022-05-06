@@ -53,7 +53,7 @@ char calc_error(char *message, char err) {
 
 double parse_number(const char *arr, int *i) {
   double y = 0;
-  while (arr[*i] && arr[*i] >= '0' && arr[*i] <= '9') {
+  while (arr[*i] >= '0' && arr[*i] <= '9') {
     y *= 10;
     y += arr[*i] - '0';
     (*i)++;
@@ -61,7 +61,7 @@ double parse_number(const char *arr, int *i) {
   if (arr[*i] == '.') {
     (*i)++;
     double pre = 1;
-    while (arr[*i] && arr[*i] >= '0' && arr[*i] <= '9') {
+    while (arr[*i] >= '0' && arr[*i] <= '9') {
       pre /= 10;
       y += (arr[*i] - '0') * pre;
       (*i)++;
