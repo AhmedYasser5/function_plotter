@@ -22,11 +22,16 @@ GtkWidget *window, *fixed, *graph, *helper, *draw, *min_x, *max_x, *min_y,
 
 gdouble minX, maxX, minY, maxY, helperX = WIDTH / 2.0;
 
-gchar eq[MAX_LABEL_SIZE];
+gchar *eq;
 
 stack_point *p;
 
-void on_destroy() { gtk_main_quit(); }
+void on_destroy() {
+  gtk_main_quit();
+  if (eq)
+    free(eq);
+  stack_point_clear(&p);
+}
 
 int main(int argc, char *argv[]) {
   gtk_init(&argc, &argv);
@@ -217,7 +222,11 @@ void on_draw_clicked(GtkButton *draw) {
     isMaxYNan = TRUE;
     maxY = -INFINITY;
   }
-  strcpy(eq, gtk_entry_get_text(GTK_ENTRY(equation)));
+  if (eq)
+    free(eq);
+  const gchar *originalEq = gtk_entry_get_text(GTK_ENTRY(equation));
+  eq = (char *)malloc(sizeof(char) * strlen(originalEq) + 1);
+  strcpy(eq, originalEq);
   printf("equation = %s\n", eq);
   if (!strcmp(eq, "")) {
     gtk_label_set_text(GTK_LABEL(messages), "Equation cannot be empty");
