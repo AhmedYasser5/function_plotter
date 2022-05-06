@@ -75,7 +75,7 @@ static gdouble convert_from_display(gdouble p, const gdouble *min,
   return p;
 }
 
-static gboolean mouse_tracking(GtkWidget *widget) {
+static gboolean mouse_tracking() {
   if (p == NULL)
     return FALSE;
   char *message = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE);
@@ -88,7 +88,7 @@ static gboolean mouse_tracking(GtkWidget *widget) {
   sprintf(message, "(x, y) = (%lf, %lf)", x, y);
   gtk_label_set_text(GTK_LABEL(messages), message);
   free(message);
-  gtk_widget_queue_draw(widget);
+  gtk_widget_queue_draw(helper);
   return TRUE;
 }
 
@@ -97,7 +97,7 @@ gboolean on_helper_button_press_event(GtkWidget *widget, GdkEventButton *event,
   if (event->button != 1)
     return FALSE;
   helperX = event->x;
-  return mouse_tracking(widget);
+  return mouse_tracking();
 }
 
 gboolean on_graph_button_press_event(GtkWidget *widget, GdkEventButton *event,
@@ -105,7 +105,7 @@ gboolean on_graph_button_press_event(GtkWidget *widget, GdkEventButton *event,
   if (event->button != 1)
     return FALSE;
   helperX = event->x;
-  return mouse_tracking(helper);
+  return mouse_tracking();
 }
 
 gboolean on_helper_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
@@ -113,7 +113,7 @@ gboolean on_helper_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
   if (!(event->state & GDK_BUTTON1_MASK))
     return FALSE;
   helperX = event->x;
-  return mouse_tracking(widget);
+  return mouse_tracking();
 }
 
 gboolean on_graph_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
@@ -121,7 +121,7 @@ gboolean on_graph_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
   if (!(event->state & GDK_BUTTON1_MASK))
     return FALSE;
   helperX = event->x;
-  return mouse_tracking(helper);
+  return mouse_tracking();
 }
 
 gboolean on_helper_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
@@ -144,8 +144,6 @@ gboolean on_helper_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
 gboolean on_graph_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   if (p == NULL)
     return FALSE;
-
-  // Don't do this!!!: gtk_widget_queue_draw(helper);
 
   cairo_set_line_width(cr, LINE_WIDTH);
   cairo_set_source_rgb(cr, RED, GREEN, BLUE);
