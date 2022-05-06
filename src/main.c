@@ -22,7 +22,7 @@ GtkWidget *window, *fixed, *graph, *helper, *draw, *min_x, *max_x, *min_y,
 
 gdouble minX, maxX, minY, maxY, helperX = WIDTH / 2.0;
 
-gchar *eq;
+gchar *eq, message[MAX_LABEL_SIZE];
 
 stack_point *p;
 
@@ -83,16 +83,13 @@ static gdouble convert_from_display(gdouble p, const gdouble *min,
 static gboolean mouse_tracking() {
   if (p == NULL)
     return FALSE;
-  char *message = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE);
   gdouble y, x = convert_from_display(helperX, &minX, &maxX, WIDTH);
   if (calculator_eval(eq, x, &y, message)) {
     gtk_label_set_text(GTK_LABEL(messages), message);
-    free(message);
     return FALSE;
   }
   sprintf(message, "(x, y) = (%lf, %lf)", x, y);
   gtk_label_set_text(GTK_LABEL(messages), message);
-  free(message);
   gtk_widget_queue_draw(helper);
   return TRUE;
 }
@@ -196,7 +193,6 @@ static char set_min_max(GtkWidget *min, GtkWidget *max, gdouble *min_co,
   }
   printf("min_%c = %lf, max_%c = %lf\n", c, *min_co, c, *max_co);
   if (state) {
-    char *message = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE);
     if (abs(state) == 1)
       sprintf(message, "Invalid Minimum %c", c);
     else if (abs(state) == 2)
@@ -204,7 +200,6 @@ static char set_min_max(GtkWidget *min, GtkWidget *max, gdouble *min_co,
     else
       sprintf(message, "Minimum %c should be less than Maximum %c", c, c);
     gtk_label_set_text(GTK_LABEL(messages), message);
-    free(message);
   }
   return state;
 }
@@ -235,14 +230,13 @@ void on_draw_clicked(GtkButton *draw) {
   gdouble step = PRECISION * (maxX - minX) / WIDTH, cur = minX;
   stack_point_clear(&p);
   gtk_label_set_text(GTK_LABEL(messages), "");
-  gchar *tmp = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE);
   while (isgreaterequal(maxX, cur)) {
     stack_point_push(&p, cur, NAN);
-    calculator_eval(eq, cur, &p->top_y, tmp);
+    calculator_eval(eq, cur, &p->top_y, message);
     if (isnan(p->top_y) || (!isMinYNan && isless(p->top_y, minY) ||
                             (!isMaxYNan && isless(maxY, p->top_y)))) {
       p->top_y = NAN;
-      gtk_label_set_text(GTK_LABEL(messages), tmp);
+      gtk_label_set_text(GTK_LABEL(messages), message);
     } else {
       if (isMinYNan)
         minY = fmin(minY, p->top_y);
@@ -251,7 +245,6 @@ void on_draw_clicked(GtkButton *draw) {
     }
     cur += step;
   }
-  free(tmp);
   if (isgreaterequal(minY, maxY) && isgreaterequal(maxY, minY)) {
     minY--;
     maxY++;
