@@ -1,4 +1,3 @@
 -DDEBUG
--I.././src 
 -I../. 
 -I.././include
