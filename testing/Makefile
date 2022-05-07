@@ -8,10 +8,11 @@ DEPDIR := ./build/deps
 BINDIR := .
 TARGET := $(BINDIR)/$(subst $(space),_,$(shell basename "${PWD}")).exe
 
-MY_PATHS := $(SRCDIR) $(BINDIR) $(INCDIR)
+MY_PATHS := $(BINDIR) $(INCDIR)
 
 ###### extra variables #######
 MY_PATHS += $(shell cat .my_paths 2>/dev/null)
+MY_FLAGS := $(shell cat .my_flags 2>/dev/null)
 
 ###### complier set-up ######
 CC = gcc
@@ -48,7 +49,9 @@ else
 	CXXFLAGS += -O0 -std=c++14
 endif
 
-OUTPUT_OPTION := -MMD -MP
+CFLAGS += $(shell $(MY_FLAGS))
+
+OUTPUT_OPTION := -MMD -MP -I $(SRCDIR)
 OUTPUT_OPTION += $(foreach i,$(MY_PATHS),-I $(i))
 
 SRCS := $(wildcard $(SRCDIR)/**/*.cpp)

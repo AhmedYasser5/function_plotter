@@ -34,10 +34,16 @@ if [ $C -eq 1 ]; then
 fi
 if [ $D -eq 1 ]; then
 	make GTK=$G THREADS=$T DEBUG=$D all
+	if [ ! -e *.exe ]; then
+		exit 127
+	fi
 	make debug
 	exit 0
 fi
 make GTK=$G THREADS=$T RELEASE=$R all
+if [ ! -e *.exe ]; then
+	exit 127
+fi
 if [ $A -eq 0 ]; then
 	shift $#
 fi
