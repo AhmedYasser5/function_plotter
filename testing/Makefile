@@ -9,10 +9,11 @@ BINDIR := .
 TARGET := $(BINDIR)/$(subst $(space),_,$(shell basename "${PWD}")).exe
 
 MY_PATHS := $(BINDIR) $(INCDIR)
+MY_FLAGS := 
 
 ###### extra variables #######
 MY_PATHS += $(shell cat .my_paths 2>/dev/null)
-MY_FLAGS := $(shell cat .my_flags 2>/dev/null)
+MY_FLAGS += $(shell cat .my_flags 2>/dev/null)
 
 ###### complier set-up ######
 CC = gcc
@@ -24,16 +25,6 @@ LDFLAGS = $(CXXFLAGS)
 DEBUGGER = gdb
 
 maketype :=
-
-ifeq ($(GTK), 1)
-	maketype += GTK
-	CFLAGS += $(shell pkg-config --cflags --libs gtk+-3.0) -rdynamic
-endif
-
-ifeq ($(THREADS), 1)
-	maketype += THREADS
-	CFLAGS += -pthread
-endif
 
 ifeq ($(RELEASE), 1)
 	maketype += RELEASE
@@ -49,10 +40,10 @@ else
 	CXXFLAGS += -O0 -std=c++14
 endif
 
-CFLAGS += $(shell $(MY_FLAGS))
+CFLAGS += $(MY_FLAGS)
 
-OUTPUT_OPTION := -MMD -MP -I $(SRCDIR)
-OUTPUT_OPTION += $(foreach i,$(MY_PATHS),-I $(i))
+OUTPUT_OPTION := -MMD -MP -I$(SRCDIR)
+OUTPUT_OPTION += $(foreach i,$(MY_PATHS),-I$(i))
 
 SRCS := $(wildcard $(SRCDIR)/**/*.cpp)
 SRCS += $(wildcard $(SRCDIR)/*.cpp)
