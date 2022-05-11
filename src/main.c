@@ -11,11 +11,13 @@
 #define BLUE 0.0
 #define LINE_WIDTH 3.0
 #define PRECISION 0.05
+#define THRESHOLD 1e-4
 
 #define MAX_LABEL_SIZE 128
 #define WIDTH 800.0
 #define HEIGHT 600.0
-#define HELPER_HEIGHT 30.0
+#define HELPER_DX 10
+#define HELPER_DY 10
 
 GtkWidget *window, *fixed, *graph, *helper, *draw, *min_x, *max_x, *min_y,
     *max_y, *equation, *messages;
@@ -74,6 +76,7 @@ static gdouble convert_to_display(gdouble p, const gdouble *min,
 
 static gdouble convert_from_display(gdouble p, const gdouble *min,
                                     const gdouble *max, const guint len) {
+  p -= HELPER_DX / 2;
   p *= *max - *min;
   p /= len;
   p += *min;
@@ -88,9 +91,9 @@ static gboolean mouse_tracking() {
     gtk_label_set_text(GTK_LABEL(messages), message);
     return FALSE;
   }
-  sprintf(message, "(x, y) = (%lf, %lf)", x, y);
-  gtk_label_set_text(GTK_LABEL(messages), message);
   gtk_widget_queue_draw(helper);
+  sprintf(message, "(x, y) = (%.4lf, %.4lf)", x, y);
+  gtk_label_set_text(GTK_LABEL(messages), message);
   return TRUE;
 }
 
@@ -102,25 +105,10 @@ gboolean on_helper_button_press_event(GtkWidget *widget, GdkEventButton *event,
   return mouse_tracking();
 }
 
-gboolean on_graph_button_press_event(GtkWidget *widget, GdkEventButton *event,
-                                     gpointer data) {
-  if (event->button != 1)
-    return FALSE;
-  helperX = event->x;
-  return mouse_tracking();
-}
-
 gboolean on_helper_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
                                        gpointer data) {
-  if (!(event->state & GDK_BUTTON1_MASK))
-    return FALSE;
-  helperX = event->x;
-  return mouse_tracking();
-}
-
-gboolean on_graph_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
-                                      gpointer data) {
-  if (!(event->state & GDK_BUTTON1_MASK))
+  if (!(event->state & GDK_BUTTON1_MASK) ||
+      isless(fabs(helperX - event->x), THRESHOLD))
     return FALSE;
   helperX = event->x;
   return mouse_tracking();
@@ -129,17 +117,11 @@ gboolean on_graph_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
 gboolean on_helper_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   if (isnan(helperX))
     return FALSE;
-  cairo_set_line_width(cr, LINE_WIDTH);
+  cairo_set_line_width(cr, LINE_WIDTH / 3.0);
   cairo_set_source_rgb(cr, 1 - RED, 1 - GREEN, 1 - BLUE);
-  cairo_move_to(cr, helperX, HELPER_HEIGHT);
-  cairo_line_to(cr, helperX, HELPER_HEIGHT / 3.0);
-  cairo_stroke(cr);
-  gdouble dx = HELPER_HEIGHT / (3 * tan(M_PI / 3.0));
   cairo_move_to(cr, helperX, 0);
-  cairo_line_to(cr, helperX - dx, HELPER_HEIGHT / 3.0);
-  cairo_line_to(cr, helperX + dx, HELPER_HEIGHT / 3.0);
-  cairo_close_path(cr);
-  cairo_fill(cr);
+  cairo_line_to(cr, helperX, HEIGHT + HELPER_DY);
+  cairo_stroke(cr);
   return TRUE;
 }
 
