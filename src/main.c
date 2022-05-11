@@ -21,8 +21,6 @@
 GtkWidget *window, *fixed, *graph, *helper, *draw, *min_x, *max_x, *min_y,
     *max_y, *equation, *messages;
 
-int window_width = 800, window_height = 600;
-
 gdouble minX, maxX, minY, maxY, helperX = WIDTH / 2.0 + HELPER_DX;
 
 gchar *eq, message[MAX_LABEL_SIZE];
