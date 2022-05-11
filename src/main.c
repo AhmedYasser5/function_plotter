@@ -11,13 +11,12 @@
 #define BLUE 0.0
 #define LINE_WIDTH 3.0
 #define PRECISION 0.05
-#define THRESHOLD 1e-4
 
 #define MAX_LABEL_SIZE 128
 #define WIDTH 800.0
 #define HEIGHT 600.0
-#define HELPER_DX 10
-#define HELPER_DY 10
+#define HELPER_DX 5.0
+#define HELPER_DY 5.0
 
 GtkWidget *window, *fixed, *graph, *helper, *draw, *min_x, *max_x, *min_y,
     *max_y, *equation, *messages;
@@ -76,7 +75,7 @@ static gdouble convert_to_display(gdouble p, const gdouble *min,
 
 static gdouble convert_from_display(gdouble p, const gdouble *min,
                                     const gdouble *max, const guint len) {
-  p -= HELPER_DX / 2;
+  p -= HELPER_DX;
   p *= *max - *min;
   p /= len;
   p += *min;
@@ -92,7 +91,7 @@ static gboolean mouse_tracking() {
     return FALSE;
   }
   gtk_widget_queue_draw(helper);
-  sprintf(message, "(x, y) = (%.4lf, %.4lf)", x, y);
+  sprintf(message, "(x, y) = (%lf, %lf)", x, y);
   gtk_label_set_text(GTK_LABEL(messages), message);
   return TRUE;
 }
@@ -108,7 +107,7 @@ gboolean on_helper_button_press_event(GtkWidget *widget, GdkEventButton *event,
 gboolean on_helper_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
                                        gpointer data) {
   if (!(event->state & GDK_BUTTON1_MASK) ||
-      isless(fabs(helperX - event->x), THRESHOLD))
+      isless(fabs(helperX - event->x), PRECISION))
     return FALSE;
   helperX = event->x;
   return mouse_tracking();
@@ -120,7 +119,7 @@ gboolean on_helper_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   cairo_set_line_width(cr, LINE_WIDTH / 3.0);
   cairo_set_source_rgb(cr, 1 - RED, 1 - GREEN, 1 - BLUE);
   cairo_move_to(cr, helperX, 0);
-  cairo_line_to(cr, helperX, HEIGHT + HELPER_DY);
+  cairo_line_to(cr, helperX, HEIGHT + 2 * HELPER_DY);
   cairo_stroke(cr);
   return TRUE;
 }
