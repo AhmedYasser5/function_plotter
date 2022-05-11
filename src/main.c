@@ -21,7 +21,9 @@
 GtkWidget *window, *fixed, *graph, *helper, *draw, *min_x, *max_x, *min_y,
     *max_y, *equation, *messages;
 
-gdouble minX, maxX, minY, maxY, helperX = WIDTH / 2.0;
+int window_width = 800, window_height = 600;
+
+gdouble minX, maxX, minY, maxY, helperX = WIDTH / 2.0 + HELPER_DX;
 
 gchar *eq, message[MAX_LABEL_SIZE];
 
@@ -65,6 +67,24 @@ int main(int argc, char *argv[]) {
   return EXIT_SUCCESS;
 }
 
+static void print_label_error(const char *message) {
+  char *output = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE * 2);
+  sprintf(
+      output,
+      "<span font=\"Sans 14\" weight=\"semibold\" color=\"#FF0000\">%s</span>",
+      message);
+  gtk_label_set_markup(GTK_LABEL(messages), output);
+  free(output);
+}
+
+static void print_label_info(const char *message) {
+  char *output = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE * 2);
+  sprintf(output, "<span font=\"Sans 14\" weight=\"semibold\">%s</span>",
+          message);
+  gtk_label_set_markup(GTK_LABEL(messages), output);
+  free(output);
+}
+
 static gdouble convert_to_display(gdouble p, const gdouble *min,
                                   const gdouble *max, const guint len) {
   p -= *min;
@@ -87,12 +107,12 @@ static gboolean mouse_tracking() {
     return FALSE;
   gdouble y, x = convert_from_display(helperX, &minX, &maxX, WIDTH);
   if (calculator_eval(eq, x, &y, message)) {
-    gtk_label_set_text(GTK_LABEL(messages), message);
+    print_label_error(message);
     return FALSE;
   }
   gtk_widget_queue_draw(helper);
   sprintf(message, "(x, y) = (%lf, %lf)", x, y);
-  gtk_label_set_text(GTK_LABEL(messages), message);
+  print_label_info(message);
   return TRUE;
 }
 
@@ -180,7 +200,7 @@ static char set_min_max(GtkWidget *min, GtkWidget *max, gdouble *min_co,
       sprintf(message, "Invalid Maximum %c", c);
     else
       sprintf(message, "Minimum %c should be less than Maximum %c", c, c);
-    gtk_label_set_text(GTK_LABEL(messages), message);
+    print_label_error(message);
   }
   return state;
 }
@@ -205,7 +225,7 @@ void on_draw_clicked(GtkButton *draw) {
   strcpy(eq, originalEq);
   printf("equation = %s\n", eq);
   if (!strcmp(eq, "")) {
-    gtk_label_set_text(GTK_LABEL(messages), "Equation cannot be empty");
+    print_label_error("Equation cannot be empty");
     return;
   }
   gdouble step = PRECISION * (maxX - minX) / WIDTH, cur = minX;
@@ -217,7 +237,7 @@ void on_draw_clicked(GtkButton *draw) {
     if (isnan(p->top_y) || (!isMinYNan && isless(p->top_y, minY) ||
                             (!isMaxYNan && isless(maxY, p->top_y)))) {
       p->top_y = NAN;
-      gtk_label_set_text(GTK_LABEL(messages), message);
+      print_label_error(message);
     } else {
       if (isMinYNan)
         minY = fmin(minY, p->top_y);
