@@ -190,6 +190,7 @@ gboolean on_grid_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
       cairo_text_path(cr, coordinates);
     }
     cairo_fill(cr);
+    free(coordinates);
   }
   return TRUE;
 }
