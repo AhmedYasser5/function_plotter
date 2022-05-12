@@ -20,7 +20,6 @@
             <property name="height-request">600</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <signal name="draw" handler="on_graph_draw" swapped="no"/>
           </object>
           <packing>
             <property name="x">5</property>
@@ -83,7 +82,6 @@
             <property name="has-focus">True</property>
             <property name="receives-default">True</property>
             <property name="tooltip-text" translatable="yes">Click on this button to draw the equation</property>
-            <signal name="clicked" handler="on_draw_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="x">720</property>
@@ -150,7 +148,6 @@
             <property name="tooltip-text" translatable="yes">Click to toggle the helper. It lets you get the coordinates of any point on the graph</property>
             <property name="active">True</property>
             <property name="draw-indicator">True</property>
-            <signal name="toggled" handler="on_toggle_helper_toggled" swapped="no"/>
           </object>
           <packing>
             <property name="x">130</property>
@@ -168,7 +165,6 @@
             <property name="tooltip-text" translatable="yes">Click to toggle grid</property>
             <property name="active">True</property>
             <property name="draw-indicator">True</property>
-            <signal name="toggled" handler="on_toggle_grid_toggled" swapped="no"/>
           </object>
           <packing>
             <property name="x">20</property>
@@ -181,7 +177,6 @@
             <property name="height-request">610</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <signal name="draw" handler="on_grid_draw" swapped="no"/>
           </object>
         </child>
         <child>
@@ -192,9 +187,6 @@
             <property name="can-focus">False</property>
             <property name="events">GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
             <property name="tooltip-text" translatable="yes">The equation will be drawn here</property>
-            <signal name="button-press-event" handler="on_helper_button_press_event" swapped="no"/>
-            <signal name="draw" handler="on_helper_draw" swapped="no"/>
-            <signal name="motion-notify-event" handler="on_helper_motion_notify_event" swapped="no"/>
           </object>
         </child>
       </object>
