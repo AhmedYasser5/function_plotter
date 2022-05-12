@@ -17,11 +17,15 @@
 #define HEIGHT 600.0
 #define HELPER_DX 5.0
 #define HELPER_DY 5.0
+#define FONT_SIZE 16.0
 
-GtkWidget *window, *fixed, *graph, *helper, *draw, *min_x, *max_x, *min_y,
-    *max_y, *equation, *messages;
+gboolean gridActive = TRUE, helperActive = TRUE;
 
-gdouble minX, maxX, minY, maxY, helperX = WIDTH / 2.0 + HELPER_DX;
+GtkWidget *window, *fixed, *graph, *helper, *grid, *min_x, *max_x, *min_y,
+    *max_y, *equation, *messages, *toggle_grid, *toggle_helper;
+
+gdouble minX, maxX, minY, maxY, helperX = WIDTH / 2.0 + HELPER_DX,
+                                helperY = HEIGHT / 2.0 + HELPER_DY;
 
 gchar *eq, message[MAX_LABEL_SIZE];
 
@@ -48,7 +52,7 @@ int main(int argc, char *argv[]) {
   fixed = GTK_WIDGET(gtk_builder_get_object(builder, "fixed"));
   graph = GTK_WIDGET(gtk_builder_get_object(builder, "graph"));
   helper = GTK_WIDGET(gtk_builder_get_object(builder, "helper"));
-  draw = GTK_WIDGET(gtk_builder_get_object(builder, "draw"));
+  grid = GTK_WIDGET(gtk_builder_get_object(builder, "grid"));
   min_x = GTK_WIDGET(gtk_builder_get_object(builder, "min_x"));
   max_x = GTK_WIDGET(gtk_builder_get_object(builder, "max_x"));
   min_y = GTK_WIDGET(gtk_builder_get_object(builder, "min_y"));
@@ -83,6 +87,16 @@ static void print_label_info(const char *message) {
   free(output);
 }
 
+void on_toggle_grid_toggled(GtkToggleButton *toggle_grid) {
+  gridActive = gtk_toggle_button_get_active(toggle_grid);
+  gtk_widget_queue_draw(grid);
+}
+
+void on_toggle_helper_toggled(GtkToggleButton *toggle_grid) {
+  helperActive = gtk_toggle_button_get_active(toggle_grid);
+  gtk_widget_queue_draw(helper);
+}
+
 static gdouble convert_to_display(gdouble p, const gdouble *min,
                                   const gdouble *max, const guint len) {
   p -= *min;
@@ -93,7 +107,6 @@ static gdouble convert_to_display(gdouble p, const gdouble *min,
 
 static gdouble convert_from_display(gdouble p, const gdouble *min,
                                     const gdouble *max, const guint len) {
-  p -= HELPER_DX;
   p *= *max - *min;
   p /= len;
   p += *min;
@@ -101,13 +114,14 @@ static gdouble convert_from_display(gdouble p, const gdouble *min,
 }
 
 static gboolean mouse_tracking() {
-  if (p == NULL)
+  if (p == NULL || !helperActive)
     return FALSE;
-  gdouble y, x = convert_from_display(helperX, &minX, &maxX, WIDTH);
+  gdouble y, x = convert_from_display(helperX - HELPER_DX, &minX, &maxX, WIDTH);
   if (calculator_eval(eq, x, &y, message)) {
     print_label_error(message);
     return FALSE;
   }
+  helperY = HEIGHT - convert_to_display(y, &minY, &maxY, HEIGHT) + HELPER_DY;
   gtk_widget_queue_draw(helper);
   sprintf(message, "(x, y) = (%lf, %lf)", x, y);
   print_label_info(message);
@@ -132,13 +146,51 @@ gboolean on_helper_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
 }
 
 gboolean on_helper_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
-  if (isnan(helperX))
+  if (isnan(helperX) || !helperActive)
     return FALSE;
   cairo_set_line_width(cr, LINE_WIDTH / 3.0);
   cairo_set_source_rgb(cr, 1 - RED, 1 - GREEN, 1 - BLUE);
   cairo_move_to(cr, helperX, 0);
   cairo_line_to(cr, helperX, HEIGHT + 2 * HELPER_DY);
+  cairo_move_to(cr, 0, helperY);
+  cairo_line_to(cr, WIDTH + 2 * HELPER_DX, helperY);
   cairo_stroke(cr);
+  return TRUE;
+}
+
+gboolean on_grid_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
+  if (gridActive) {
+    gdouble height = HEIGHT + 2 * HELPER_DY, width = WIDTH + 2 * HELPER_DX;
+    cairo_set_line_width(cr, LINE_WIDTH / 3.0);
+    cairo_set_source_rgba(cr, 1, 1, 1, 0.75);
+    for (gdouble x = 0, step = width / 8.0; x <= width; x += step) {
+      cairo_move_to(cr, x, height);
+      cairo_line_to(cr, x, height - HELPER_DY);
+    }
+    for (gdouble y = 0, step = height / 6.0; y <= height; y += step) {
+      cairo_move_to(cr, 0, height - y);
+      cairo_line_to(cr, HELPER_DX, height - y);
+    }
+    cairo_stroke(cr);
+    if (p == NULL)
+      return TRUE;
+    cairo_set_font_size(cr, FONT_SIZE);
+    char *coordinates = (char *)malloc(sizeof(char) * 10);
+    for (gdouble x = 0, step = width / 8.0; x <= width; x += step) {
+      int num =
+          sprintf(coordinates, "%.2e",
+                  convert_from_display(x - HELPER_DX, &minX, &maxX, WIDTH));
+      cairo_move_to(cr, x - num * FONT_SIZE / 4.0, height - 2 * HELPER_DY);
+      cairo_text_path(cr, coordinates);
+    }
+    for (gdouble y = 0, step = height / 6.0; y <= height; y += step) {
+      sprintf(coordinates, "%.2e",
+              convert_from_display(y - HELPER_DY, &minY, &maxY, HEIGHT));
+      cairo_move_to(cr, 2 * HELPER_DX, height - y + FONT_SIZE / 4.0);
+      cairo_text_path(cr, coordinates);
+    }
+    cairo_fill(cr);
+  }
   return TRUE;
 }
 
