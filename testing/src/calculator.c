@@ -53,7 +53,7 @@ char calc_error(char *message, char err) {
 
 double parse_number(const char *arr, int *i) {
   double y = 0;
-  while (arr[*i] && arr[*i] >= '0' && arr[*i] <= '9') {
+  while (arr[*i] >= '0' && arr[*i] <= '9') {
     y *= 10;
     y += arr[*i] - '0';
     (*i)++;
@@ -61,7 +61,7 @@ double parse_number(const char *arr, int *i) {
   if (arr[*i] == '.') {
     (*i)++;
     double pre = 1;
-    while (arr[*i] && arr[*i] >= '0' && arr[*i] <= '9') {
+    while (arr[*i] >= '0' && arr[*i] <= '9') {
       pre /= 10;
       y += (arr[*i] - '0') * pre;
       (*i)++;
@@ -188,7 +188,8 @@ char process_op(char arr_i, char *last_op, stack_char **op,
   return 6;
 }
 
-char process_num(const char *arr, int *i, char *last_op, stack_double **num) {
+char process_num(const char *arr, int *i, char *last_op, stack_char **op,
+                 stack_double **num) {
   if (arr[*i] != '.' && (arr[*i] < '0' || arr[*i] > '9'))
     return 4;
 
@@ -199,8 +200,13 @@ char process_num(const char *arr, int *i, char *last_op, stack_double **num) {
   if (arr[*i + 1] == '.')
     return 5;
 
-  if (*last_op == '-')
-    y *= -1;
+  if (*last_op == '-') {
+    *last_op = 0;
+    char ret = process_op('*', last_op, op, num);
+    if (ret)
+      return ret;
+    stack_double_push(num, -1);
+  }
   *last_op = 0;
   stack_double_push(num, y);
   return 0;
@@ -223,6 +229,7 @@ char calculator_eval(const char *arr, double x, double *ans, char *message) {
     if (arr[i] == ' ')
       continue;
 
+    char ret = 0;
     if (arr[i] == 'x') {
       if (!last_op) {
         double_nums_error(message, arr, i, size);
@@ -230,20 +237,21 @@ char calculator_eval(const char *arr, double x, double *ans, char *message) {
         clear_all();
         return -1;
       }
-      double y = x;
-      if (last_op == '-')
-        y *= -1;
+      if (last_op == '-') {
+        last_op = 0;
+        ret = process_op('*', &last_op, &op, &num);
+        stack_double_push(&num, -1);
+      }
       last_op = 0;
-      stack_double_push(&num, y);
-      continue;
+      stack_double_push(&num, x);
+    } else {
+      ret = process_op(arr[i], &last_op, &op, &num);
+      if (ret == 6)
+        ret = process_num(arr, &i, &last_op, &op, &num);
     }
 
-    char ret = process_op(arr[i], &last_op, &op, &num);
-    if (ret == 6)
-      ret = process_num(arr, &i, &last_op, &num);
     if (!ret)
       continue;
-
     if (ret == -1)
       double_nums_error(message, arr, i, size);
     else if (ret == 3)
