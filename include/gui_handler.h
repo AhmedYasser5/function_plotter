@@ -1,13 +1,12 @@
 #pragma once
 
-#include "stack.h"
 #include <gtk/gtk.h>
 
 #define RED 1.0
 #define GREEN 0.0
 #define BLUE 0.0
 #define LINE_WIDTH 3.0
-#define PRECISION 0.05
+#define PRECISION 0.5
 
 #define MAX_LABEL_SIZE 128
 #define WIDTH 800.0
@@ -22,11 +21,9 @@ typedef struct {
   GtkWidget *window, *fixed, *graph, *draw, *helper, *grid, *min_x, *max_x,
       *min_y, *max_y, *equation, *messages, *toggle_grid, *toggle_helper;
 
-  gdouble minX, maxX, minY, maxY, helperX, helperY;
+  gdouble minX, maxX, minY, maxY, helperX, helperY, *points;
 
   gchar *eq, message[MAX_LABEL_SIZE];
-
-  stack_point *p;
 } gui_handler;
 
 void gui_handler_start_gui(int argc, char *argv[]);
