@@ -358,7 +358,7 @@ static void test_calculator_eval() {
 
   // test error 2
   sprintf(eq, "-x ^ 0.5");
-  test_error_code(eq, dummy, NAN, 2);
+  test_error_code(eq, dummy, -5, 2);
   printf("\ttest_error_2 succeeded\n");
   fflush(stdout);
 
@@ -384,6 +384,12 @@ static void test_calculator_eval() {
   sprintf(eq, "2/3 * x^2 + x^3 - -8^2");
   double y = test_error_code(eq, dummy, 5, 0);
   assert(isequal(y, 617.0 / 3));
+  printf("\ttest_proper_equation_result succeeded\n");
+  fflush(stdout);
+
+  sprintf(eq, "-2/3 * x^2 - x^3 + -8^2");
+  y = test_error_code(eq, dummy, 5, 0);
+  assert(isequal(y, -617.0 / 3));
   printf("\ttest_proper_equation_result succeeded\n");
   fflush(stdout);
 
