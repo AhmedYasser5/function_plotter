@@ -362,6 +362,11 @@ static void test_calculator_eval() {
   printf("\ttest_error_2 succeeded\n");
   fflush(stdout);
 
+  sprintf(eq, "-2/3 * x^0.04 - x^0.2 - -8^2");
+  test_error_code(eq, dummy, -5, 2);
+  printf("\ttest_error_2 succeeded\n");
+  fflush(stdout);
+
   // test error 3
   sprintf(eq, "x**3.3");
   test_error_code(eq, dummy, NAN, 3);
