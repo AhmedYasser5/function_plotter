@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* unrefs any created data */
+/* unrefs any created widgets */
 void on_destroy() { gtk_main_quit(); }
 
 /* prints errors in red color */
@@ -62,24 +62,30 @@ static gdouble convert_from_display(gdouble p, const gdouble *min,
 
 /* tracks the mouse in the helper */
 static gboolean mouse_tracking(gui_handler *handler) {
-  if (handler->p == NULL || !handler->helperActive)
+  if (handler->eq == NULL || !handler->helperActive)
     return FALSE;
 
   GtkWidget *messages = handler->messages;
   gchar *message = handler->message;
+  gdouble *minX = &handler->minX, *maxX = &handler->maxX,
+          *minY = &handler->minY, *maxY = &handler->maxY;
+  gdouble *helperX = &handler->helperX, *helperY = &handler->helperY;
 
-  gdouble y, x = convert_from_display(handler->helperX - HELPER_DX,
-                                      &handler->minX, &handler->maxX, WIDTH);
-  if (calculator_eval(handler->eq, x, &y, message)) {
-    print_label_error(messages, message);
-    return FALSE;
+  gdouble x = convert_from_display(*helperX - HELPER_DX, minX, maxX, WIDTH);
+  gdouble step = PRECISION * (*maxX - *minX) / WIDTH;
+  int index = (x - *minX) / step;
+  gdouble approxX = *minX + index * step, approxY = handler->points[index];
+  if (isless(approxX, *minX) || isless(*maxX, approxX)) {
+    approxX = approxY = NAN;
+    *helperX = NAN;
   }
-
-  handler->helperY =
-      HEIGHT - convert_to_display(y, &handler->minY, &handler->maxY, HEIGHT) +
-      HELPER_DY;
+  if (isnan(approxY))
+    *helperY = NAN;
+  else
+    *helperY =
+        HEIGHT - convert_to_display(approxY, minY, maxY, HEIGHT) + HELPER_DY;
   gtk_widget_queue_draw(handler->helper);
-  sprintf(message, "(x, y) = (%lf, %lf)", x, y);
+  sprintf(message, "(x, y) = (%lf, %lf)", approxX, approxY);
   print_label_info(messages, message);
   return TRUE;
 }
@@ -112,10 +118,14 @@ gboolean on_helper_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
     return FALSE;
   cairo_set_line_width(cr, LINE_WIDTH / 3.0);
   cairo_set_source_rgb(cr, 1 - RED, 1 - GREEN, 1 - BLUE);
-  cairo_move_to(cr, handler->helperX, 0);
-  cairo_line_to(cr, handler->helperX, HEIGHT + 2 * HELPER_DY);
-  cairo_move_to(cr, 0, handler->helperY);
-  cairo_line_to(cr, WIDTH + 2 * HELPER_DX, handler->helperY);
+  if (!isnan(handler->helperX)) {
+    cairo_move_to(cr, handler->helperX, 0);
+    cairo_line_to(cr, handler->helperX, HEIGHT + 2 * HELPER_DY);
+  }
+  if (!isnan(handler->helperY)) {
+    cairo_move_to(cr, 0, handler->helperY);
+    cairo_line_to(cr, WIDTH + 2 * HELPER_DX, handler->helperY);
+  }
   cairo_stroke(cr);
   return TRUE;
 }
@@ -138,7 +148,7 @@ gboolean on_grid_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
     }
     cairo_stroke(cr);
 
-    if (handler->p == NULL)
+    if (handler->eq == NULL)
       return TRUE;
 
     cairo_set_font_size(cr, FONT_SIZE);
@@ -167,27 +177,25 @@ gboolean on_grid_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
 gboolean on_graph_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   gui_handler *handler = data;
 
-  if (handler->p == NULL)
+  if (handler->eq == NULL)
     return FALSE;
 
   cairo_set_line_width(cr, LINE_WIDTH);
   cairo_set_source_rgb(cr, RED, GREEN, BLUE);
 
-  stack_point *curP = handler->p;
+  gdouble *p = handler->points;
   gdouble *minX = &handler->minX, *maxX = &handler->maxX,
           *minY = &handler->minY, *maxY = &handler->maxY;
+  gdouble cur = *minX, step = PRECISION * (*maxX - *minX) / WIDTH;
 
-  while (curP->next != NULL) {
-    if (!isnan(curP->top_y) && !isnan(curP->next->top_y)) {
-      cairo_move_to(cr, convert_to_display(curP->top_x, minX, maxX, WIDTH),
-                    HEIGHT -
-                        convert_to_display(curP->top_y, minY, maxY, HEIGHT));
-      cairo_line_to(
-          cr, convert_to_display(curP->next->top_x, minX, maxX, WIDTH),
-          HEIGHT - convert_to_display(curP->next->top_y, minY, maxY, HEIGHT));
+  for (int i = 0, n = WIDTH / PRECISION; i + 1 < n; i++, cur += step) {
+    if (!isnan(p[i]) && !isnan(p[i + 1])) {
+      cairo_move_to(cr, convert_to_display(cur, minX, maxX, WIDTH),
+                    HEIGHT - convert_to_display(p[i], minY, maxY, HEIGHT));
+      cairo_line_to(cr, convert_to_display(cur + step, minX, maxX, WIDTH),
+                    HEIGHT - convert_to_display(p[i + 1], minY, maxY, HEIGHT));
       cairo_stroke(cr);
     }
-    curP = curP->next;
   }
 
   return TRUE;
@@ -280,27 +288,23 @@ void on_draw_clicked(GtkButton *draw, gpointer data) {
     print_label_error(messages, "Equation cannot be empty");
     return;
   }
-  gdouble step = PRECISION * (*maxX - *minX) / WIDTH, cur = *minX;
 
-  stack_point_clear(&handler->p);
   gtk_label_set_text(GTK_LABEL(messages), "");
-  stack_point *p = NULL;
-  while (isgreaterequal(*maxX, cur)) {
-    stack_point_push(&p, cur, NAN);
-    calculator_eval(eq, cur, &p->top_y, message);
-    if (isnan(p->top_y) || (!isMinYNan && isless(p->top_y, *minY) ||
-                            (!isMaxYNan && isless(*maxY, p->top_y)))) {
-      p->top_y = NAN;
+  gdouble *p = handler->points;
+  gdouble step = PRECISION * (*maxX - *minX) / WIDTH, cur = *minX;
+  for (int i = 0, n = WIDTH / PRECISION; i < n; i++, cur += step) {
+    calculator_eval(eq, cur, p + i, message);
+    if (isnan(p[i]) || (!isMinYNan && isless(p[i], *minY) ||
+                        (!isMaxYNan && isless(*maxY, p[i])))) {
+      p[i] = NAN;
       print_label_error(messages, message);
     } else {
       if (isMinYNan)
-        *minY = fmin(*minY, p->top_y);
+        *minY = fmin(*minY, p[i]);
       if (isMaxYNan)
-        *maxY = fmax(*maxY, p->top_y);
+        *maxY = fmax(*maxY, p[i]);
     }
-    cur += step;
   }
-  handler->p = p;
   gtk_widget_queue_draw(handler->graph);
 }
 
@@ -314,7 +318,8 @@ void gui_handler_start_gui(int argc, char *argv[]) {
   handler.helperX = WIDTH / 2.0 + HELPER_DX;
   handler.helperY = HEIGHT / 2.0 + HELPER_DY;
   handler.eq = NULL;
-  handler.p = NULL;
+  handler.points =
+      (gdouble *)malloc(sizeof(gdouble) * (int)(WIDTH / PRECISION));
 
   GtkBuilder *builder = gtk_builder_new_from_file("plotter.glade");
   gtk_builder_connect_signals(builder, NULL);
@@ -364,5 +369,5 @@ void gui_handler_start_gui(int argc, char *argv[]) {
 
   if (handler.eq)
     free(handler.eq);
-  stack_point_clear(&handler.p);
+  free(handler.points);
 }
