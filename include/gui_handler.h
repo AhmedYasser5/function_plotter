@@ -6,7 +6,7 @@
 #define GREEN 0.0
 #define BLUE 0.0
 #define LINE_WIDTH 3.0
-#define PRECISION 0.5
+#define PRECISION 0.25
 
 #define MAX_LABEL_SIZE 128
 #define WIDTH 800.0
