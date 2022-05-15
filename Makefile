@@ -17,7 +17,7 @@ MY_FLAGS += $(shell cat .my_flags 2>/dev/null)
 
 ###### complier set-up ######
 CC = gcc
-CFLAGS = -Wextra
+CFLAGS = $(MY_FLAGS) -Wextra
 CXX = g++
 CXXFLAGS = $(CFLAGS)
 LD = g++
@@ -39,8 +39,6 @@ else
 	CFLAGS += -O0
 	CXXFLAGS += -O0 -std=c++14
 endif
-
-CFLAGS += $(MY_FLAGS)
 
 OUTPUT_OPTION := -MMD -MP -I$(SRCDIR)
 OUTPUT_OPTION += $(foreach i,$(MY_PATHS),-I$(i))
@@ -64,17 +62,18 @@ init :
 	-@echo -e "-DDEBUG$(foreach i,$(MY_PATHS),\n-I../$(i)\n-I$(i))" >| src/.clang_complete
 
 $(TARGET): $(OBJS)
-	-@echo LD $(maketype) "$(<D)/*.o" "->" $@ && $(LD) $(LDFLAGS) $(OBJS) -o $@
+	-@echo LD $(maketype) "$(<D)/*.o" "->" $@ && \
+		$(LD) -o $@ $(OBJS) $(LDFLAGS)
 
 $(OBJDIR)/%.cpp.o: $(SRCDIR)/%.cpp
 	-@echo CXX $(maketype) $< "->" $@ && \
-		$(CXX) $(CXXFLAGS) -c $< $(OUTPUT_OPTION) \
-		-o $@ -MF $(DEPDIR)/$(<F).d
+		$(CXX) -c $< $(OUTPUT_OPTION) \
+		-o $@ -MF $(DEPDIR)/$(<F).d $(CXXFLAGS)
 
 $(OBJDIR)/%.c.o: $(SRCDIR)/%.c
 	-@echo CC $(maketype) $< "->" $@ && \
-		$(CC) $(CFLAGS) -c $< $(OUTPUT_OPTION) \
-		-o $@ -MF $(DEPDIR)/$(<F).d
+		$(CC) -c $< $(OUTPUT_OPTION) \
+		-o $@ -MF $(DEPDIR)/$(<F).d $(CFLAGS)
 
 .PHONY: clean
 clean: 
