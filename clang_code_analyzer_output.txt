@@ -1,0 +1,9 @@
+scan-build: Using '/usr/bin/clang-13' for static analysis
+CC NORMAL src/calculator.c -> build/obj/calculator.c.o
+CC NORMAL src/gui_handler.c -> build/obj/gui_handler.c.o
+CC NORMAL src/main.c -> build/obj/main.c.o
+CC NORMAL src/stack.c -> build/obj/stack.c.o
+LD NORMAL build/obj/*.o -> Function_Plotter.exe
+scan-build: Analysis run complete.
+scan-build: Removing directory '/tmp/scan-build-2022-05-15-224347-54633-1' because it contains no reports.
+scan-build: No bugs found.

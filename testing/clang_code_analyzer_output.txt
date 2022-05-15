@@ -1,0 +1,8 @@
+scan-build: Using '/usr/bin/clang-13' for static analysis
+CC NORMAL src/calculator.c -> build/obj/calculator.c.o
+CC NORMAL src/main.c -> build/obj/main.c.o
+CC NORMAL src/stack.c -> build/obj/stack.c.o
+LD NORMAL build/obj/*.o -> testing.exe
+scan-build: Analysis run complete.
+scan-build: Removing directory '/tmp/scan-build-2022-05-15-224415-54784-1' because it contains no reports.
+scan-build: No bugs found.
