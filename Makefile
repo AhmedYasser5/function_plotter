@@ -40,8 +40,7 @@ else
 	CXXFLAGS += -O0 -std=c++14
 endif
 
-OUTPUT_OPTION := -MMD -MP -I$(SRCDIR)
-OUTPUT_OPTION += $(foreach i,$(MY_PATHS),-I$(i))
+CFLAGS += -MMD -MP -I$(SRCDIR) $(foreach i,$(MY_PATHS),-I$(i))
 
 SRCS := $(wildcard $(SRCDIR)/**/*.cpp)
 SRCS += $(wildcard $(SRCDIR)/*.cpp)
@@ -67,13 +66,11 @@ $(TARGET): $(OBJS)
 
 $(OBJDIR)/%.cpp.o: $(SRCDIR)/%.cpp
 	-@echo CXX $(maketype) $< "->" $@ && \
-		$(CXX) -c $< $(OUTPUT_OPTION) \
-		-o $@ -MF $(DEPDIR)/$(<F).d $(CXXFLAGS)
+		$(CXX) -c $< -o $@ -MF $(DEPDIR)/$(<F).d $(CXXFLAGS)
 
 $(OBJDIR)/%.c.o: $(SRCDIR)/%.c
 	-@echo CC $(maketype) $< "->" $@ && \
-		$(CC) -c $< $(OUTPUT_OPTION) \
-		-o $@ -MF $(DEPDIR)/$(<F).d $(CFLAGS)
+		$(CC) -c $< -o $@ -MF $(DEPDIR)/$(<F).d $(CFLAGS)
 
 .PHONY: clean
 clean: 
