@@ -201,11 +201,8 @@ char process_num(const char *arr, int *i, char *last_op, stack_char **op,
     return 5;
 
   if (*last_op == '-') {
-    *last_op = 0;
-    char ret = process_op('*', last_op, op, num);
-    if (ret)
-      return ret;
     stack_double_push(num, -1);
+    stack_char_push(op, '*');
   }
   *last_op = 0;
   stack_double_push(num, y);
@@ -231,19 +228,17 @@ char calculator_eval(const char *arr, double x, double *ans, char *message) {
 
     char ret = 0;
     if (arr[i] == 'x') {
-      if (!last_op) {
-        double_nums_error(message, arr, i, size);
-        *ans = NAN;
-        clear_all();
-        return -1;
-      }
-      if (last_op == '-') {
+      if (!last_op)
+        ret = -1;
+      else {
+        if (last_op == '-') {
+          stack_double_push(&num, -1);
+          stack_char_push(&op, '*');
+        }
+
         last_op = 0;
-        ret = process_op('*', &last_op, &op, &num);
-        stack_double_push(&num, -1);
+        stack_double_push(&num, x);
       }
-      last_op = 0;
-      stack_double_push(&num, x);
     } else {
       ret = process_op(arr[i], &last_op, &op, &num);
       if (ret == 6)
