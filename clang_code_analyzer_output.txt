@@ -5,5 +5,5 @@ CC NORMAL src/main.c -> build/obj/main.c.o
 CC NORMAL src/stack.c -> build/obj/stack.c.o
 LD NORMAL build/obj/*.o -> Function_Plotter.exe
 scan-build: Analysis run complete.
-scan-build: Removing directory '/tmp/scan-build-2022-05-15-224347-54633-1' because it contains no reports.
+scan-build: Removing directory '/tmp/scan-build-2022-05-16-203748-33930-1' because it contains no reports.
 scan-build: No bugs found.
