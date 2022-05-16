@@ -1,6 +1,6 @@
 <p align="center">
 
-  ![Function Plotter](media/plotter.png)
+  <img height="500" width="auto" src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/plotter.png" alt="Function Plotter">
 
 </p>
 
@@ -31,11 +31,9 @@ make
 <details><summary>Working Examples</summary>
 <p align="center">
 
-  <img src="http://github.com/AhmedYasser5/function_plotter/media/Working_Example1.gif" alt="Working Example 1">
-
-  ![Working Example 1](media/Working_Example1.gif)
-
-  ![Working Example 2](media/Working_Example2.gif)
+  <img src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/Working_Example1.gif" alt="Working Example 1">
+  <br><br>
+  <img src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/Working_Example2.gif" alt="Working Example 2">
 
 </p>
 </details>
@@ -43,9 +41,9 @@ make
 <details><summary>Extra Features</summary>
 <p align="center">
 
-  ![Extra Features 1](media/Extra_Features1.gif)
-
-  ![Extra Features 2](media/Extra_Features2.gif)
+  <img src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/Extra_Features1.gif" alt="Extra Features 1">
+  <br><br>
+  <img src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/Extra_Features2.gif" alt="Extra Features 2">
 
 </p>
 </details>
@@ -53,9 +51,9 @@ make
 <details><summary>Errors</summary>
 <p align="center">
 
-  ![Errors 1](media/Errors1.gif)
-
-  ![Errors 2](media/Errors2.gif)
+  <img src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/Errors1.gif" alt="Errors 1">
+  <br><br>
+  <img src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/Errors2.gif" alt="Errors 2">
 
 </p>
 </details>
