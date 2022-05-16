@@ -1,3 +1,9 @@
+<p align="center">
+
+  ![Function Plotter](media/plotter.png)
+
+</p>
+
 ## Features
 
 * Using open source GTK platform, meaning that the program can be configured to work on different operating systems.
@@ -23,7 +29,9 @@ make
 ## Examples
 
 <details><summary>Working Examples</summary>
-<p>
+<p align="center">
+
+  <img src="http://github.com/AhmedYasser5/function_plotter/media/Working_Example1.gif" alt="Working Example 1">
 
   ![Working Example 1](media/Working_Example1.gif)
 
@@ -33,7 +41,7 @@ make
 </details>
 
 <details><summary>Extra Features</summary>
-<p>
+<p align="center">
 
   ![Extra Features 1](media/Extra_Features1.gif)
 
@@ -43,7 +51,7 @@ make
 </details>
 
 <details><summary>Errors</summary>
-<p>
+<p align="center">
 
   ![Errors 1](media/Errors1.gif)
 
