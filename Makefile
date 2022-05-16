@@ -65,10 +65,12 @@ $(TARGET): $(OBJS)
 		$(LD) -o $@ $(OBJS) $(LDFLAGS)
 
 $(OBJDIR)/%.cpp.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(OBJDIR) $(DEPDIR)
 	-@echo CXX $(maketype) $< "->" $@ && \
 		$(CXX) -c $< -o $@ -MF $(DEPDIR)/$(<F).d $(CXXFLAGS)
 
 $(OBJDIR)/%.c.o: $(SRCDIR)/%.c
+	@mkdir -p $(OBJDIR) $(DEPDIR)
 	-@echo CC $(maketype) $< "->" $@ && \
 		$(CC) -c $< -o $@ -MF $(DEPDIR)/$(<F).d $(CFLAGS)
 
