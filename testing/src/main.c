@@ -386,9 +386,9 @@ static void test_calculator_eval() {
   fflush(stdout);
 
   // test a proper equation's result
-  sprintf(eq, "2/3 * x^2 + x^3 - -8^2");
+  sprintf(eq, "2/-3 * x^-2 + x^3 - -8^2");
   double y = test_error_code(eq, dummy, 5, 0);
-  assert(isequal(y, 617.0 / 3));
+  assert(isequal(y, 14173.0 / 75));
   printf("\ttest_proper_equation_result succeeded\n");
   fflush(stdout);
 
