@@ -6,14 +6,14 @@
 
 ## Features
 
-* Using open source GTK platform, meaning that the program can be configured to work on different operating systems.
+* Using the open source GTK platform, meaning that the program can be configured to work on different operating systems.
 * Plotting arbitrary polynomials containing only numbers, 'x', and operators ('+', '-', '*', '/', '^').
 * Input validation and error handling. Explanations for different errors will be provided.
 * Inspection of plots using the mouse. If you click and drag over a certain point, you will get its coordinates.
 
 ## Getting Started
 
-To get started with the program, you need to compile it first. Compiling is as easy as running the following:
+To get started with the program, you need to compile it first. Compiling and running is as easy as running the following:
 
 ```shell
 ./compile_and_run.sh
