@@ -16,7 +16,7 @@ static const char deps[OPS][OPS] = {{'+', '-', '*', '/', '^'},
 /* does only one operation using an operator from the top of the stack along
  * with two numbers from the other stack. It returns a non-zero integer if it
  * finds an error */
-static char calc(stack_char **op, stack_double **num) {
+char calc(stack_char **op, stack_double **num) {
   if (!*op)
     return -1; // op stack is empty
   if (!(*num && (*num)->next))
