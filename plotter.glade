@@ -64,8 +64,8 @@
             <property name="height-request">40</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
-            <property name="tooltip-text" translatable="yes">Type the equation needed here</property>
-            <property name="placeholder-text" translatable="yes">Equation in x</property>
+            <property name="tooltip-text" translatable="yes">Type the function needed here</property>
+            <property name="placeholder-text" translatable="yes">Function in x</property>
           </object>
           <packing>
             <property name="x">20</property>
@@ -81,7 +81,7 @@
             <property name="can-focus">True</property>
             <property name="has-focus">True</property>
             <property name="receives-default">True</property>
-            <property name="tooltip-text" translatable="yes">Click on this button to draw the equation</property>
+            <property name="tooltip-text" translatable="yes">Click on this button to draw the function</property>
           </object>
           <packing>
             <property name="x">720</property>
