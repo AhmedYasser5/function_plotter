@@ -22,8 +22,7 @@ To get started with the program, you need to compile it first. Compiling and run
 You can also run compilation separately from running as follows:
 
 ```shell
-make
-./*.exe
+make run
 ```
 
 ## Examples

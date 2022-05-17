@@ -60,6 +60,12 @@ init :
 	-@for i in $(wildcard *.h); do mv ./$$i $(INCDIR)/$$i; done
 	-@echo -e "-DDEBUG$(foreach i,$(MY_PATHS),\n-I../$(i)\n-I$(i))" >| src/.clang_complete
 
+.PHONY: run
+run : $(TARGET)
+	@echo ------------------------------------------------------
+	@$(TARGET)
+	@echo
+
 $(TARGET): $(OBJS)
 	-@echo LD $(maketype) "$(<D)/*.o" "->" $@ && \
 		$(LD) -o $@ $(OBJS) $(LDFLAGS)
