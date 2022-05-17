@@ -6,7 +6,7 @@ INCDIR := ./include
 OBJDIR := ./build/obj
 DEPDIR := ./build/deps
 BINDIR := .
-TARGET := $(BINDIR)/$(subst $(space),_,$(shell basename "${PWD}")).exe
+TARGET := $(BINDIR)/Function_Plotter.exe
 
 MY_PATHS := $(BINDIR) $(INCDIR)
 MY_FLAGS := 
