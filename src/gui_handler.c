@@ -181,11 +181,11 @@ gboolean on_grid_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
       return TRUE;
 
     cairo_set_font_size(cr, FONT_SIZE);
-    char *coordinates = (char *)malloc(sizeof(char) * 10);
+    char *coordinates = (char *)malloc(sizeof(char) * 15);
 
     // write down x-axis numbers
     for (gdouble x = 0, step = width / 8.0; x <= width; x += step) {
-      int num = sprintf(coordinates, "%.2e",
+      int num = sprintf(coordinates, "%.3g",
                         convert_from_display(x - HELPER_DX, &handler->minX,
                                              &handler->maxX, WIDTH));
       cairo_move_to(cr, x - num * FONT_SIZE / 4.0, height - 2 * HELPER_DY);
@@ -194,7 +194,7 @@ gboolean on_grid_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
 
     // write down y-axis numbers
     for (gdouble y = 0, step = height / 6.0; y <= height; y += step) {
-      sprintf(coordinates, "%.2e",
+      sprintf(coordinates, "%.3g",
               convert_from_display(y - HELPER_DY, &handler->minY,
                                    &handler->maxY, HEIGHT));
       cairo_move_to(cr, 2 * HELPER_DX, height - y + FONT_SIZE / 4.0);
@@ -333,10 +333,10 @@ void on_draw_clicked(GtkButton *draw, gpointer data) {
 
   gchar *eq = handler->eq;
   strcpy(eq, originalEq);
-  printf("equation = %s\n", eq);
+  printf("function = %s\n", eq);
 
   if (!strcmp(eq, "")) {
-    print_label_error(messages, "Equation cannot be empty");
+    print_label_error(messages, "Function cannot be empty");
     return;
   }
 
