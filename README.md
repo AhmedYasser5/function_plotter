@@ -43,6 +43,8 @@ make run
   <img src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/Extra_Features1.gif" alt="Extra Features 1">
   <br><br>
   <img src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/Extra_Features2.gif" alt="Extra Features 2">
+  <br><br>
+  <img src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/Extra_Features3.gif" alt="Extra Features 3">
 
 </p>
 </details>
