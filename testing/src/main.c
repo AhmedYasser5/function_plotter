@@ -1,4 +1,4 @@
-#define EPSILON 1e-9
+#define EPSILON 1e-8
 
 #include "calculator.h"
 #include "stack.h"
@@ -21,10 +21,6 @@ static void test_stack_double_push();
 static void test_stack_double_pop();
 static void test_stack_double_clear();
 
-static void test_stack_point_push();
-static void test_stack_point_pop();
-static void test_stack_point_clear();
-
 static void test_calc();
 static void test_calculator_atolf();
 static void test_calculator_eval();
@@ -41,10 +37,6 @@ int main(int argc, char *argv[]) {
   test_stack_double_pop();
   test_stack_double_clear();
 
-  test_stack_point_push();
-  test_stack_point_pop();
-  test_stack_point_clear();
-
   test_calc();
   test_calculator_atolf();
   test_calculator_eval();
@@ -59,6 +51,7 @@ static int rand_int(int start, int end) {
 
 static char rand_char(char start, char end) { return rand_int(start, end); }
 
+/* random double that might be NAN, -NAN, INF, -INF, ... */
 static double rand_double() {
   uint64_t m = 1LL * rand() * rand();
   double n;
@@ -82,10 +75,12 @@ static char isequal(double x, double y) { return isless(fabs(x - y), EPSILON); }
 static void test_stack_char_push() {
   printf("\ntest_stack_char_push() started\n");
   fflush(stdout);
+
   stack_char *st = NULL;
   char c = rand_char(INT8_MIN, INT8_MAX);
   stack_char_push(&st, c);
   assert(st != NULL && st->top == c);
+
   free(st);
   printf("test_stack_char_push() succeeded\n");
   fflush(stdout);
@@ -94,10 +89,12 @@ static void test_stack_char_push() {
 static void test_stack_char_pop() {
   printf("\ntest_stack_char_pop() started\n");
   fflush(stdout);
+
   stack_char *st = NULL;
   stack_char_push(&st, rand_char(INT8_MIN, INT8_MAX));
   stack_char_pop(&st);
   assert(st == NULL);
+
   printf("test_stack_char_pop() succeeded\n");
   fflush(stdout);
 }
@@ -105,14 +102,17 @@ static void test_stack_char_pop() {
 static void test_stack_char_clear() {
   printf("\ntest_stack_char_clear() started\n");
   fflush(stdout);
+
   stack_char *st = NULL;
   int n = rand_int(2, 10);
   for (int i = 0; i < n; i++)
     stack_char_push(&st, rand_char(INT8_MIN, INT8_MAX));
+
   stack_char_clear(&st);
   assert(st == NULL);
   stack_char_clear(&st);
   assert(st == NULL);
+
   printf("test_stack_char_clear() succeeded\n");
   fflush(stdout);
 }
@@ -120,10 +120,12 @@ static void test_stack_char_clear() {
 static void test_stack_double_push() {
   printf("\ntest_stack_double_push() started\n");
   fflush(stdout);
+
   stack_double *st = NULL;
   double n = rand_double();
   stack_double_push(&st, n);
   assert(st != NULL && isequal(st->top, n));
+
   free(st);
   printf("test_stack_double_push() succeeded\n");
   fflush(stdout);
@@ -132,10 +134,12 @@ static void test_stack_double_push() {
 static void test_stack_double_pop() {
   printf("\ntest_stack_double_pop() started\n");
   fflush(stdout);
+
   stack_double *st = NULL;
   stack_double_push(&st, rand_double());
   stack_double_pop(&st);
   assert(st == NULL);
+
   printf("test_stack_double_pop() succeeded\n");
   fflush(stdout);
 }
@@ -143,53 +147,18 @@ static void test_stack_double_pop() {
 static void test_stack_double_clear() {
   printf("\ntest_stack_double_clear() started\n");
   fflush(stdout);
+
   stack_double *st = NULL;
   int n = rand_int(2, 10);
   for (int i = 0; i < n; i++)
     stack_double_push(&st, rand_double());
+
   stack_double_clear(&st);
   assert(st == NULL);
   stack_double_clear(&st);
   assert(st == NULL);
+
   printf("test_stack_double_clear() succeeded\n");
-  fflush(stdout);
-}
-
-static void test_stack_point_push() {
-  printf("\ntest_stack_point_push() started\n");
-  fflush(stdout);
-  stack_point *st = NULL;
-  double x = rand_double(), y = rand_double();
-  stack_point_push(&st, x, y);
-  assert(st != NULL && isequal(st->top_x, x) && isequal(st->top_y, y));
-  free(st);
-  printf("test_stack_point_push() succeeded\n");
-  fflush(stdout);
-}
-
-static void test_stack_point_pop() {
-  printf("\ntest_stack_point_pop() started\n");
-  fflush(stdout);
-  stack_point *st = NULL;
-  stack_point_push(&st, rand_double(), rand_double());
-  stack_point_pop(&st);
-  assert(st == NULL);
-  printf("test_stack_point_pop() succeeded\n");
-  fflush(stdout);
-}
-
-static void test_stack_point_clear() {
-  printf("\ntest_stack_point_clear() started\n");
-  fflush(stdout);
-  stack_point *st = NULL;
-  int n = rand_int(2, 10);
-  for (int i = 0; i < n; i++)
-    stack_point_push(&st, rand_double(), rand_double());
-  stack_point_clear(&st);
-  assert(st == NULL);
-  stack_point_clear(&st);
-  assert(st == NULL);
-  printf("test_stack_point_clear() succeeded\n");
   fflush(stdout);
 }
 
@@ -205,11 +174,13 @@ static void test_calc() {
   printf("\ntest_calc() started\n");
   fflush(stdout);
 
+  // not enough operators
   stack_char *op = NULL;
   stack_double *num = NULL;
   for (int j = 0; j <= 2; j++) {
     for (int jj = 0; jj < j; jj++)
       stack_double_push(&num, rand_double());
+
     char ret = calc(&op, &num);
     assert(ret == -1);
     stack_double_clear(&num);
@@ -217,11 +188,13 @@ static void test_calc() {
   printf("\ttest_no_operators succeeded\n");
   fflush(stdout);
 
+  // not enough numbers
   for (int i = 0; i < OPS; i++) {
     for (int j = 0; j < 2; j++) {
       stack_char_push(&op, ops[i]);
       for (int jj = 0; jj < j; jj++)
         stack_double_push(&num, rand_double());
+
       char ret = calc(&op, &num);
       assert(ret == -2);
       clear_all();
@@ -255,11 +228,13 @@ static void test_calc() {
     stack_char_push(&op, ops[i]);
     stack_double_push(&num, rand_int(-100, 100));
     stack_double_push(&num, rand_int(-100, 100));
+
     char ret = calc(&op, &num);
     assert(ret == 0 && op == NULL && num != NULL && num->next == NULL);
     clear_all();
   }
   printf("\ttest_normal_operation succeeded\n");
+
   printf("test_calc() succeeded\n");
   fflush(stdout);
 #undef clear_all
@@ -278,18 +253,22 @@ static void test_all_signs(char *eq, char ans, int start, int from) {
 static void test_calculator_atolf() {
   printf("\ntest_calculator_atolf() started\n");
   fflush(stdout);
+
   char *eq = (char *)malloc(sizeof(char) * MAX_SIZE);
 
+  // empty equation
   sprintf(eq, " ");
   test_all_signs(eq, false, 0, 1);
   printf("\ttest_empty_equation succeeded\n");
   fflush(stdout);
 
+  // proper number
   sprintf(eq, " %lf", rand_proper_double());
   test_all_signs(eq, true, 0, 1);
   printf("\ttest_proper_number succeeded\n");
   fflush(stdout);
 
+  // whitespaces
   int spaces_before = rand_int(1, 10), spaces_after = rand_int(1, 10);
   int n = 0;
   for (; n < spaces_before; n++)
@@ -301,17 +280,15 @@ static void test_calculator_atolf() {
   printf("\ttest_spaces succeeded\n");
   fflush(stdout);
 
-  sprintf(eq + n, "%c", rand_char(INT8_MIN, ' ' - 1));
-  test_all_signs(eq, false, spaces_before, 0);
-  sprintf(eq + n, "%c", rand_char(' ' + 1, INT8_MAX));
+  // unknown characters at the end
+  sprintf(eq + n, "%c", rand_char('a', 'z'));
   test_all_signs(eq, false, spaces_before, 0);
   sprintf(eq + n, "\0");
   printf("\ttest_bad_char_at_end succeeded\n");
   fflush(stdout);
 
-  sprintf(eq + spaces_before - 1, "%c", rand_char(INT8_MIN, ' ' - 1));
-  test_all_signs(eq, false, spaces_before, 0);
-  sprintf(eq + spaces_before - 1, "%c", rand_char(' ' + 1, INT8_MAX));
+  // unknown characters at the beginning
+  sprintf(eq + spaces_before - 1, "%c", rand_char('a', 'z'));
   test_all_signs(eq, false, spaces_before, 0);
   printf("\ttest_bad_char_at_beg succeeded\n");
   fflush(stdout);
@@ -324,8 +301,10 @@ static void test_calculator_atolf() {
 static double test_error_code(const char *eq, char *dummy, double x, int ans) {
   if (isnan(x))
     x = rand_proper_double();
+
   double y;
   char err = calculator_eval(eq, x, &y, dummy);
+
   assert(isnan(y) == !!ans && err == ans);
   return y;
 }
@@ -333,6 +312,7 @@ static double test_error_code(const char *eq, char *dummy, double x, int ans) {
 static void test_calculator_eval() {
   printf("\ntest_calculator_eval() started\n");
   fflush(stdout);
+
   char *eq = (char *)malloc(sizeof(char) * MAX_SIZE);
   char *dummy = (char *)malloc(sizeof(char) * MAX_SIZE);
 
