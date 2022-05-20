@@ -8,7 +8,7 @@
 
 * Using the open source GTK platform, meaning that the program can be configured to work on different operating systems.
 * Plotting arbitrary polynomials containing only numbers, 'x', and operators ('+', '-', '*', '/', '^').
-* Input validation and error handling. Explanations for different errors will be provided.
+* Input validation and error handling. Explanations for different errors are provided in the [Examples section](#examples) below.
 * Inspection of plots using the mouse. If you click and drag over a certain point, you will get its coordinates.
 
 ## Getting Started
@@ -23,6 +23,16 @@ You can also run compilation separately from running as follows:
 
 ```shell
 make run
+```
+
+Another way is to create an executable file first and then run it whenever needed:
+
+```shell
+# Creating an executable file
+make
+
+# Running
+./Function_Plotter.exe
 ```
 
 ## Examples
