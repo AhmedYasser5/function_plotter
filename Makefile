@@ -6,14 +6,11 @@ INCDIR := ./include
 OBJDIR := ./build/obj
 DEPDIR := ./build/deps
 BINDIR := .
+
 TARGET := $(BINDIR)/Function_Plotter.exe
 
 MY_PATHS := $(BINDIR) $(INCDIR)
-MY_FLAGS := 
-
-###### extra variables #######
-MY_PATHS += $(shell cat .my_paths 2>/dev/null)
-MY_FLAGS += $(shell cat .my_flags 2>/dev/null)
+MY_FLAGS := -rdynamic $(shell pkg-config --cflags --libs gtk+-3.0)
 
 ###### complier set-up ######
 CC = gcc
