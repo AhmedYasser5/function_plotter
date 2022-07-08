@@ -78,6 +78,8 @@ static gboolean mouse_tracking(gui_handler *handler) {
   gdouble step = PRECISION * (*maxX - *minX) / WIDTH;
   // approximating the location of the point that the mouse is pointing at
   int index = (approxX - *minX) / step;
+  approxX =
+      index * step + *minX; // get the x-coordinate that correspond to approxY
   gdouble approxY = handler->points[index];
 
   // handling out-of-bounds points
