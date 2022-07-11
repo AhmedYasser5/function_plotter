@@ -28,7 +28,7 @@ ifeq ($(RELEASE), 1)
 	CFLAGS += -O3 -march=native
 	CXXFLAGS += -std=c++17
 	LDFLAGS += -flto=full
-else ifeq ($(DEBUG), 1)
+else
 	maketype += DEBUG
 	CFLAGS += -O0 -g -DDEBUG=1
 	CXXFLAGS += -std=c++17

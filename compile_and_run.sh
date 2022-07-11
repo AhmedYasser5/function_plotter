@@ -12,6 +12,7 @@ if [ "${1:0:1}" == "-" ]; then
 			printf "This program compiles c/cpp files using make and runs the\
  executable file while calculating the elapsed time\n
 It uses custom cflags from .my_flags and custom paths from .my_paths in the same directory as the Makefile\n
+The default build has debugging configurations\n
 Note: In the case of using more than one parameter, concatenate them (i.e.\
  ./compile_and_run.sh -cra arg1 arg2)\n
 ./compile_and_run.sh [-[c|r|d|t]] [-a [arg1 arg2 ...]]\n
