@@ -30,11 +30,8 @@ ifeq ($(RELEASE), 1)
 	LDFLAGS += -flto=full
 else ifeq ($(DEBUG), 1)
 	maketype += DEBUG
-	CFLAGS += -O0 -g
-else
-	maketype += NORMAL
-	CFLAGS += -O0
-	CXXFLAGS += -O0 -std=c++14
+	CFLAGS += -O0 -g -DDEBUG=1
+	CXXFLAGS += -std=c++17
 endif
 
 CFLAGS += -MMD -MP -I$(SRCDIR) $(foreach i,$(MY_PATHS),-I$(i))
@@ -55,7 +52,7 @@ init :
 	@mkdir -p $(SRCDIR) $(INCDIR) $(OBJDIR) $(DEPDIR)
 	-@for i in $(wildcard *.cpp) $(wildcard *.c) $(wildcard *.tpp); do mv ./$$i $(SRCDIR)/$$i; done
 	-@for i in $(wildcard *.h); do mv ./$$i $(INCDIR)/$$i; done
-	-@echo -e "-DDEBUG$(foreach i,$(MY_PATHS),\n-I../$(i)\n-I$(i))" >| src/.clang_complete
+	-@echo -e "$(foreach i,$(MY_PATHS),\n-I../$(i)\n-I$(i))" >| src/.clang_complete
 
 .PHONY: run
 run : $(TARGET)
