@@ -280,8 +280,10 @@ static char set_min_max(GtkWidget *min, GtkWidget *max, gdouble *min_co,
     *min_co = *max_co = NAN;
   }
 
+#if DEBUG == 1
   // report min and max for debugging
   printf("min_%c = %lf, max_%c = %lf\n", c, *min_co, c, *max_co);
+#endif
   // handling errors
   if (state) {
     if (abs(state) == 1)
@@ -335,7 +337,9 @@ void on_draw_clicked(GtkButton *draw, gpointer data) {
 
   gchar *eq = handler->eq;
   strcpy(eq, originalEq);
+#if DEBUG == 1
   printf("function = %s\n", eq);
+#endif
 
   if (!strcmp(eq, "")) {
     print_label_error(messages, "Function cannot be empty");
