@@ -16,20 +16,20 @@
 To get started with the program, you need to compile it first. Compiling and running is as easy as running the following:
 
 ```shell
-./compile_and_run.sh
+./compile_and_run.sh -r
 ```
 
-You can also run compilation separately from running as follows:
+OR
 
 ```shell
-make run
+make RELEASE=1 run
 ```
 
-Another way is to create an executable file first and then run it whenever needed:
+You can also run compilation separately from running by creating an executable file first and then run it whenever needed:
 
 ```shell
 # Creating an executable file
-make
+make RELEASE=1
 
 # Running
 ./Function_Plotter.exe
