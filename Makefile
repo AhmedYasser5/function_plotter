@@ -47,6 +47,10 @@ OBJS := $(patsubst $(SRCDIR)/%,$(OBJDIR)/%.$(maketype).o,$(SRCS))
 .PHONY: all
 all : $(TARGET)
 
+.PHONY: getTarget
+getTarget :
+	@echo $(TARGET)
+
 .PHONY: run
 run : $(TARGET)
 	@$(TARGET)
