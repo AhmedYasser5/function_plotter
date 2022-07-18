@@ -1,6 +1,3 @@
-empty :=
-space := $(empty) $(empty)
-
 SRCDIR := ./src
 INCDIR := ./include
 OBJDIR := ./build/obj
@@ -50,18 +47,18 @@ OBJS := $(patsubst $(SRCDIR)/%,$(OBJDIR)/%.$(maketype).o,$(SRCS))
 .PHONY: all
 all : $(TARGET)
 
+.PHONY: run
+run : $(TARGET)
+	@$(TARGET)
+	@echo
+
 .PHONY: init
 init :
 	-@rm -rf build $(wildcard *.exe)
 	@mkdir -p $(SRCDIR) $(INCDIR) $(OBJDIR) $(DEPDIR)
 	-@for i in $(wildcard *.cpp) $(wildcard *.c) $(wildcard *.tpp); do mv ./$$i $(SRCDIR)/$$i; done
 	-@for i in $(wildcard *.h) $(wildcard *.hpp); do mv ./$$i $(INCDIR)/$$i; done
-	-@echo -e "$(foreach i,$(MY_PATHS),\n-I../$(i)\n-I$(i))" >| src/.clang_complete
-
-.PHONY: run
-run : $(TARGET)
-	@$(TARGET)
-	@echo
+	-@echo -e "$(foreach i,$(MY_PATHS),-I../$(i)\n-I$(i)\n)" >| src/.clang_complete
 
 $(TARGET): $(OBJS)
 	-@echo LD $(maketype) "$(<D)/*.o" "->" $@ && \
