@@ -60,7 +60,10 @@ init :
 	@mkdir -p $(SRCDIR) $(INCDIR) $(OBJDIR) $(DEPDIR)
 	-@for i in $(wildcard *.c); do mv ./$$i $(SRCDIR)/$$i; done
 	-@for i in $(wildcard *.h); do mv ./$$i $(INCDIR)/$$i; done
-	-@echo -e "$(foreach i,$(MY_PATHS),-I../$(i)\n-I$(i)\n)" >| src/.clang_complete
+	-@$(file >$(SRCDIR)/.clang_complete)\
+		$(foreach i,$(MY_PATHS),\
+			$(file >>$(SRCDIR)/.clang_complete,-I$(i))\
+			$(file >>$(SRCDIR)/.clang_complete,-I../$(i)))
 
 $(TARGET) : $(OBJS)
 	-@echo LD $(maketype) "$(<D)/*.o" "->" $@ && \
