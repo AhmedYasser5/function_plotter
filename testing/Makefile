@@ -19,7 +19,7 @@ MY_FLAGS :=
 
 ###### complier set-up ######
 CC = gcc
-CFLAGS = $(MY_FLAGS) -Wextra -Wno-unused-result
+CFLAGS = $(MY_FLAGS) -Wextra -Wno-unused-result -std=c17
 LD = g++
 LDFLAGS = $(CFLAGS)
 DEBUGGER = gdb
