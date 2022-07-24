@@ -6,7 +6,7 @@ OBJDIR := ./build/obj
 DEPDIR := ./build/deps
 BINDIR := .
 
-TARGET := $(BINDIR)/Testing_Function_Plotter
+TARGET := $(BINDIR)/Testing_Function_Plotter_
 ifeq ($(RELEASE), 1)
 	TARGET := $(TARGET)Release
 else
