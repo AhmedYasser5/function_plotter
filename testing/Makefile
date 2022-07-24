@@ -1,5 +1,7 @@
-SRCDIR := ./src
-INCDIR := ./include
+SRCDIR1 := ./src
+SRCDIR2 := ../src
+INCDIR1 := ./include
+INCDIR2 := ../include
 OBJDIR := ./build/obj
 DEPDIR := ./build/deps
 BINDIR := .
@@ -12,37 +14,42 @@ else
 endif
 TARGET := $(TARGET).exe
 
-MY_PATHS := $(BINDIR) $(INCDIR)
+MY_PATHS := $(BINDIR) $(INCDIR1) $(INCDIR2)
 MY_FLAGS := 
 
 ###### complier set-up ######
 CC = gcc
-CFLAGS = $(MY_FLAGS) -Wextra
-CXX = g++
-CXXFLAGS = $(CFLAGS)
+CFLAGS = $(MY_FLAGS) -Wextra -Wno-unused-result
 LD = g++
-LDFLAGS = $(CXXFLAGS)
+LDFLAGS = $(CFLAGS)
 DEBUGGER = gdb
 
 ifeq ($(RELEASE), 1)
 	maketype := RELEASE
-	CFLAGS += -O3 -march=native
-	CXXFLAGS += -std=c++17
-	LDFLAGS += -flto=full
+	CFLAGS += -O2 -ftree-vectorize -fomit-frame-pointer -march=native
+	# Link Time Optimization
+	CFLAGS += -flto
 else
 	maketype := DEBUG
-	CFLAGS += -O0 -g -DDEBUG=1
-	CXXFLAGS += -std=c++17
+	CFLAGS += -Og -ggdb2 -DDEBUG=1
+	# Overflow protection
+	CFLAGS += -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fstack-clash-protection -fcf-protection
+	CFLAGS += -Wl,-z,defs -Wl,-z,now -Wl,-z,relro
 endif
 
-CFLAGS += -MMD -MP -I$(SRCDIR) $(foreach i,$(MY_PATHS),-I$(i))
+CFLAGS += -MMD -MP -I$(SRCDIR1) -I$(SRCDIR2) $(foreach i,$(MY_PATHS),-I$(i))
 
-SRCS := $(wildcard $(SRCDIR)/**/*.cpp)
-SRCS += $(wildcard $(SRCDIR)/*.cpp)
-SRCS += $(wildcard $(SRCDIR)/**/*.c)
-SRCS += $(wildcard $(SRCDIR)/*.c)
-DEPS := $(patsubst $(SRCDIR)/%,$(DEPDIR)/%.d,$(SRCS))
-OBJS := $(patsubst $(SRCDIR)/%,$(OBJDIR)/%.$(maketype).o,$(SRCS))
+SRCS1 := $(wildcard $(SRCDIR1)/*.c)
+DEPS := $(patsubst $(SRCDIR1)/%,$(DEPDIR)/%1.d,$(SRCS1))
+OBJS := $(patsubst $(SRCDIR1)/%,$(OBJDIR)/%1.$(maketype).o,$(SRCS1))
+
+SRCS2 := $(filter-out $(SRCDIR2)/main.c $(SRCDIR2)/gui_handler.c,$(wildcard $(SRCDIR2)/*.c))
+DEPS += $(patsubst $(SRCDIR2)/%,$(DEPDIR)/%2.d,$(SRCS2))
+OBJS += $(patsubst $(SRCDIR2)/%,$(OBJDIR)/%2.$(maketype).o,$(SRCS2))
+
+CREATE = mkdir -p $(OBJDIR) $(DEPDIR)
+COMPILE = echo CC $(maketype) $(1) "->" $(2) && \
+					$(CC) -c $(1) -o $(2) -MF $(DEPDIR)/$(3).d $(CFLAGS)
 
 .PHONY: all
 all : $(TARGET)
@@ -53,37 +60,35 @@ getTarget :
 
 .PHONY: run
 run : $(TARGET)
-	@$(TARGET)
+	@$(TARGET) $(ARGUMENTS)
 	@echo
 
 .PHONY: init
 init :
 	-@rm -rf build $(wildcard *.exe)
-	@mkdir -p $(SRCDIR) $(INCDIR) $(OBJDIR) $(DEPDIR)
-	-@for i in $(wildcard *.cpp) $(wildcard *.c) $(wildcard *.tpp); do mv ./$$i $(SRCDIR)/$$i; done
-	-@for i in $(wildcard *.h) $(wildcard *.hpp); do mv ./$$i $(INCDIR)/$$i; done
+	@mkdir -p $(SRCDIR1) $(INCDIR1) $(OBJDIR) $(DEPDIR)
+	-@for i in $(wildcard *.c); do mv ./$$i $(SRCDIR1)/$$i; done
+	-@for i in $(wildcard *.h); do mv ./$$i $(INCDIR1)/$$i; done
 	-@echo -e "$(foreach i,$(MY_PATHS),-I../$(i)\n-I$(i)\n)" >| src/.clang_complete
 
-$(TARGET): $(OBJS)
+$(TARGET) : $(OBJS)
 	-@echo LD $(maketype) "$(<D)/*.o" "->" $@ && \
 		$(LD) -o $@ $(OBJS) $(LDFLAGS)
 
-$(OBJDIR)/%.cpp.$(maketype).o: $(SRCDIR)/%.cpp
-	@mkdir -p $(OBJDIR) $(DEPDIR)
-	-@echo CXX $(maketype) $< "->" $@ && \
-		$(CXX) -c $< -o $@ -MF $(DEPDIR)/$(<F).d $(CXXFLAGS)
+$(OBJDIR)/%.c1.$(maketype).o : $(SRCDIR1)/%.c
+	@$(call CREATE)
+	-@$(call COMPILE,$<,$@,$(<F))
 
-$(OBJDIR)/%.c.$(maketype).o: $(SRCDIR)/%.c
-	@mkdir -p $(OBJDIR) $(DEPDIR)
-	-@echo CC $(maketype) $< "->" $@ && \
-		$(CC) -c $< -o $@ -MF $(DEPDIR)/$(<F).d $(CFLAGS)
+$(OBJDIR)/%.c2.$(maketype).o : $(SRCDIR2)/%.c
+	@$(call CREATE)
+	-@$(call COMPILE,$<,$@,$(<F))
 
 .PHONY: clean
-clean: 
+clean : 
 	-$(RM) $(OBJS) $(DEPS) $(TARGET)
 
 .PHONY: debug
-debug: $(TARGET)
+debug : $(TARGET)
 	$(DEBUGGER) $(TARGET)
 
 -include $(DEPS)
