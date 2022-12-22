@@ -11,17 +11,16 @@ do
 		elif [ "$CHAR" == "a" ]; then A=1
 		else
 			printf "This program compiles c/cpp files using make and runs the\
- executable file while calculating the elapsed time\n
-It uses custom cflags from .my_flags and custom paths from .my_paths in the same directory as the Makefile\n
-The default build has debugging configurations\n
-Note: In the case of using more than one parameter, you can concatenate them (i.e.\
- ./compile_and_run.sh -cra arg1 arg2)\n
-./compile_and_run.sh [-[c|r|d|t]] [-a [arg1 arg2 ...]]\n
-	-c\tcleans (deletes) already built files that have the configurations given (debug or release)
-  -r\tbuilds using release configurations
-  -d\tbuilds using debug configurations, and runs the debugger
-	-a\tsends the following parameters as arguments to main function (this should be the last argument)
-  -h\tshows this help message"
+ executable file while calculating the elapsed time.
+The default build has debugging configurations.\n
+./compile_and_run.sh [options] [-a [arg1 arg2 ...]]\n
+Options:
+\t-c\tcleans (deletes) already built files that have the configurations given (debug or release)
+\t-r\tbuilds using release configurations
+\t-d\tbuilds using debug configurations, and runs the debugger
+\t-h\tshows this help message\n
+Arguments:
+\t-a\tsends the following parameters as arguments to main function (this should be the last argument)\n"
 			exit 0
 		fi
 		i=$(($i + 1))

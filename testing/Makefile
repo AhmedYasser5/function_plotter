@@ -1,12 +1,11 @@
-SRCDIR1 := ./src
-SRCDIR2 := ../src
-INCDIR1 := ./include
-INCDIR2 := ../include
-OBJDIR := ./build/obj
-DEPDIR := ./build/deps
-BINDIR := .
+SRCDIR := src
+INCDIR := include
+OBJDIR := build/obj
+DEPDIR := build/deps
+BINDIR1 := .
+BINDIR2 := ..
 
-TARGET := $(BINDIR)/Testing_Function_Plotter_
+TARGET := $(BINDIR1)/Testing_Function_Plotter_
 ifeq ($(RELEASE), 1)
 	TARGET := $(TARGET)Release
 else
@@ -14,15 +13,13 @@ else
 endif
 TARGET := $(TARGET).exe
 
-MY_PATHS := $(BINDIR) $(INCDIR1) $(INCDIR2)
-MY_FLAGS := 
+MY_FLAGS := -I$(BINDIR1) -I$(INCDIR) -I$(BINDIR2)/$(INCDIR)
 
-###### complier set-up ######
-CC = gcc
-CFLAGS = $(MY_FLAGS) -Wextra -Wno-unused-result -std=c17
-LD = g++
+CC = clang
+CFLAGS = $(MY_FLAGS) -Wextra -Wno-unused-result -Wno-unused-command-line-argument -std=c17
+LD = clang++
 LDFLAGS = $(CFLAGS)
-DEBUGGER = gdb
+DEBUGGER = lldb
 
 ifeq ($(RELEASE), 1)
 	maketype := RELEASE
@@ -31,25 +28,27 @@ ifeq ($(RELEASE), 1)
 	CFLAGS += -flto
 else
 	maketype := DEBUG
-	CFLAGS += -Og -ggdb2 -DDEBUG=1
+	CFLAGS += -Og -ggdb3 -DDEBUG=1
 	# Overflow protection
 	CFLAGS += -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fstack-clash-protection -fcf-protection
 	CFLAGS += -Wl,-z,defs -Wl,-z,now -Wl,-z,relro
+	CFLAGS += -fsanitize=address -fsanitize=undefined -fsanitize=leak
 endif
 
-CFLAGS += -MMD -MP -I$(SRCDIR1) -I$(SRCDIR2) $(foreach i,$(MY_PATHS),-I$(i))
+CFLAGS += -MMD -MP
 
-SRCS1 := $(wildcard $(SRCDIR1)/*.c)
-DEPS := $(patsubst $(SRCDIR1)/%,$(DEPDIR)/%1.d,$(SRCS1))
-OBJS := $(patsubst $(SRCDIR1)/%,$(OBJDIR)/%1.$(maketype).o,$(SRCS1))
+SRCS := $(wildcard $(BINDIR2)/$(SRCDIR)/*.c)
+SRCS += $(wildcard $(BINDIR2)/$(SRCDIR)/**/*.c)
+SRCS := $(filter-out $(BINDIR2)/$(SRCDIR)/main.c $(BINDIR2)/$(SRCDIR)/gui_handler.c,$(SRCS))
 
-SRCS2 := $(filter-out $(SRCDIR2)/main.c $(SRCDIR2)/gui_handler.c,$(wildcard $(SRCDIR2)/*.c))
-DEPS += $(patsubst $(SRCDIR2)/%,$(DEPDIR)/%2.d,$(SRCS2))
-OBJS += $(patsubst $(SRCDIR2)/%,$(OBJDIR)/%2.$(maketype).o,$(SRCS2))
+OBJS := $(patsubst $(BINDIR2)/$(SRCDIR)/%,$(BINDIR2)/$(OBJDIR)/%.$(maketype).o,$(SRCS))
+DEPS := $(patsubst $(BINDIR2)/$(SRCDIR)/%,$(BINDIR2)/$(DEPDIR)/%.d,$(SRCS))
 
-CREATE = mkdir -p $(OBJDIR) $(DEPDIR)
-COMPILE = echo CC $(maketype) $(1) "->" $(2) && \
-					$(CC) -c $(1) -o $(2) -MF $(DEPDIR)/$(3).d $(CFLAGS)
+SRCS := $(wildcard $(SRCDIR)/*.c)
+SRCS += $(wildcard $(SRCDIR)/**/*.c)
+
+OBJS += $(patsubst $(SRCDIR)/%,$(OBJDIR)/%.$(maketype).o,$(SRCS))
+DEPS += $(patsubst $(SRCDIR)/%,$(DEPDIR)/%.d,$(SRCS))
 
 .PHONY: all
 all : $(TARGET)
@@ -60,31 +59,37 @@ getTarget :
 
 .PHONY: run
 run : $(TARGET)
-	@$(TARGET) $(ARGUMENTS)
-	@echo
+	@echo --------------------------------------------------
+	@\time -f "\n--------------------------------------------------\nElapsed Time: %e sec\nCPU Percentage: %P\n"\
+		$(TARGET) $(ARGUMENTS)
 
 .PHONY: init
 init :
 	-@rm -rf build $(wildcard *.exe)
-	@mkdir -p $(SRCDIR1) $(INCDIR1) $(OBJDIR) $(DEPDIR)
-	-@for i in $(wildcard *.c); do mv ./$$i $(SRCDIR1)/$$i; done
-	-@for i in $(wildcard *.h); do mv ./$$i $(INCDIR1)/$$i; done
-	-@$(file >$(SRCDIR1)/.clang_complete)\
-		$(foreach i,$(MY_PATHS),\
-			$(file >>$(SRCDIR1)/.clang_complete,-I$(i))\
-			$(file >>$(SRCDIR1)/.clang_complete,-I../$(i)))
+	@mkdir -p $(SRCDIR) $(INCDIR) $(OBJDIR) $(DEPDIR)
+	@mkdir -p $(BINDIR2)/$(SRCDIR) $(BINDIR2)/$(INCDIR) $(BINDIR2)/$(OBJDIR) $(BINDIR2)/$(DEPDIR)
+	@for i in $(wildcard *.c); do mv ./$$i $(SRCDIR)/$$i; done
+	@for i in $(wildcard *.h); do mv ./$$i $(INCDIR)/$$i; done
+	@$(file >compile_flags.txt)
+	@$(foreach i,$(CFLAGS),$(file >>compile_flags.txt,$(i)))
 
 $(TARGET) : $(OBJS)
-	-@echo LD $(maketype) "$(<D)/*.o" "->" $@ && \
+	-@echo LD $(maketype) "ALL ->" $@ && \
 		$(LD) -o $@ $(OBJS) $(LDFLAGS)
 
-$(OBJDIR)/%.c1.$(maketype).o : $(SRCDIR1)/%.c
-	@$(call CREATE)
-	-@$(call COMPILE,$<,$@,$(<F))
+CREATE = mkdir -p $(1) $(dir $(2))
+COMPILE = echo CC $(maketype) $(1) "->" $(2) && \
+						$(CC) -c $(1) -o $(2) -MF $(3) $(CFLAGS)
 
-$(OBJDIR)/%.c2.$(maketype).o : $(SRCDIR2)/%.c
-	@$(call CREATE)
-	-@$(call COMPILE,$<,$@,$(<F))
+$(OBJDIR)/%.c.$(maketype).o : $(SRCDIR)/%.c
+	@$(eval CUR_DEP := $(patsubst $(SRCDIR)/%,$(DEPDIR)/%.d,$<))
+	@$(call CREATE,$(@D),$(CUR_DEP))
+	-@$(call COMPILE,$<,$@,$(CUR_DEP))
+
+$(BINDIR2)/$(OBJDIR)/%.c.$(maketype).o : $(BINDIR2)/$(SRCDIR)/%.c
+	@$(eval CUR_DEP := $(patsubst $(BINDIR2)/$(SRCDIR)/%,$(BINDIR2)/$(DEPDIR)/%.d,$<))
+	@$(call CREATE,$(@D),$(CUR_DEP))
+	-@$(call COMPILE,$<,$@,$(CUR_DEP))
 
 .PHONY: clean
 clean : 
@@ -92,6 +97,7 @@ clean :
 
 .PHONY: debug
 debug : $(TARGET)
-	$(DEBUGGER) $(TARGET)
+	@export ASAN_OPTIONS=detect_leaks=0; \
+		$(DEBUGGER) $(TARGET)
 
 -include $(DEPS)
