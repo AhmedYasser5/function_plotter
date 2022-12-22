@@ -1,3 +1,7 @@
+# Function Plotter
+
+## ⛔ This project is being rewritten in C++ in [this repository](https://github.com/AhmedYasser5/Graphical_Calculator)
+
 <p align="center">
 
   <img height="500" width="auto" src="https://github.com/AhmedYasser5/function_plotter/blob/master/media/plotter.png" alt="Function Plotter">
