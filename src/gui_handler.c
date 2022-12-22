@@ -8,22 +8,32 @@
 /* unrefs any created widgets */
 void on_destroy() { gtk_main_quit(); }
 
+static char *safeSprintf(const char *format, ...) {
+  va_list args1, args2;
+  va_start(args1, format);
+  va_copy(args2, args1);
+  int sz = vsnprintf(NULL, 0, format, args1) + 1;
+  va_end(args1);
+  char *str = (char *)malloc(sizeof(char) * sz);
+  vsprintf(str, format, args2);
+  va_end(args2);
+  return str;
+}
+
 /* prints errors in red color */
 static void print_label_error(GtkWidget *messages, const char *message) {
-  char *output = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE * 2);
-  sprintf(
-      output,
-      "<span font=\"Sans 14\" weight=\"semibold\" color=\"#FF0000\">%s</span>",
-      message);
+  char *output = safeSprintf(
+      "<span font=\"Sans %d\" weight=\"semibold\" color=\"#FF0000\">%s</span>",
+      FONT_SIZE, message);
   gtk_label_set_markup(GTK_LABEL(messages), output);
   free(output);
 }
 
 /* prints information in default color */
 static void print_label_info(GtkWidget *messages, const char *message) {
-  char *output = (char *)malloc(sizeof(char) * MAX_LABEL_SIZE * 2);
-  sprintf(output, "<span font=\"Sans 14\" weight=\"semibold\">%s</span>",
-          message);
+  char *output =
+      safeSprintf("<span font=\"Sans %d\" weight=\"semibold\">%s</span>",
+                  FONT_SIZE, message);
   gtk_label_set_markup(GTK_LABEL(messages), output);
   free(output);
 }
@@ -67,7 +77,6 @@ static gboolean mouse_tracking(gui_handler *handler) {
     return FALSE;
 
   GtkWidget *messages = handler->messages;
-  gchar *message = handler->message;
   gdouble *minX = &handler->minX, *maxX = &handler->maxX,
           *minY = &handler->minY, *maxY = &handler->maxY;
   gdouble *helperX = &handler->helperX, *helperY = &handler->helperY;
@@ -97,8 +106,9 @@ static gboolean mouse_tracking(gui_handler *handler) {
                    // should also add "HELPER_DY" to avoid drawing at the border
 
   gtk_widget_queue_draw(handler->helper);
-  sprintf(message, "(x, y) = (%lf, %lf)", approxX, approxY);
+  char *message = safeSprintf("(x, y) = (%lf, %lf)", approxX, approxY);
   print_label_info(messages, message);
+  free(message);
   return TRUE;
 }
 
@@ -243,8 +253,7 @@ gboolean on_graph_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
 
 /* handles different errors in the ranges of x and y given in entry boxes */
 static char set_min_max(GtkWidget *min, GtkWidget *max, gdouble *min_co,
-                        gdouble *max_co, const char c, GtkWidget *messages,
-                        gchar *message) {
+                        gdouble *max_co, const int c, GtkWidget *messages) {
   char state = 0;
 
   // read Minimum x or y
@@ -286,15 +295,17 @@ static char set_min_max(GtkWidget *min, GtkWidget *max, gdouble *min_co,
 #endif
   // handling errors
   if (state) {
+    char *message = NULL;
     if (abs(state) == 1)
-      sprintf(message, "Invalid Minimum %c", c);
+      message = safeSprintf("Invalid Minimum %c", c);
     else if (abs(state) == 2)
-      sprintf(message, "Invalid Maximum %c", c);
+      message = safeSprintf("Invalid Maximum %c", c);
     else if (state == 3)
-      sprintf(message, "Minimum %c should be less than Maximum %c", c, c);
+      message = safeSprintf("Minimum %c should be less than Maximum %c", c, c);
     else
-      sprintf(message, "Minimum %c cannot be equal to Maximum %c", c, c);
+      message = safeSprintf("Minimum %c cannot be equal to Maximum %c", c, c);
     print_label_error(messages, message);
+    free(message);
   }
 
   return state;
@@ -310,11 +321,10 @@ void on_draw_clicked(GtkButton *draw, gpointer data) {
           *minY = &handler->minY, *maxY = &handler->maxY;
 
   GtkWidget *messages = handler->messages;
-  gchar *message = handler->message;
 
   // errors of x values are intolerable, while empty y values are allowed
-  if (set_min_max(min_x, max_x, minX, maxX, 'x', messages, message) ||
-      set_min_max(min_y, max_y, minY, maxY, 'y', messages, message) > 0)
+  if (set_min_max(min_x, max_x, minX, maxX, 'x', messages) ||
+      set_min_max(min_y, max_y, minY, maxY, 'y', messages) > 0)
     return;
 
   // setting auto y values; for example, if isMaxYNan is true, the maxY will be
@@ -351,7 +361,8 @@ void on_draw_clicked(GtkButton *draw, gpointer data) {
   gdouble step = PRECISION * (*maxX - *minX) / WIDTH, cur = *minX;
   for (int i = 0, n = WIDTH / PRECISION; i < n; i++, cur += step) {
     // calculating the corresponding y for x = cur
-    calculator_eval(eq, cur, p + i, message);
+    char *message = NULL;
+    calculator_eval(eq, cur, p + i, &message);
 
     if (isnan(p[i])) { // handling errors
       print_label_error(messages, message);
@@ -366,6 +377,7 @@ void on_draw_clicked(GtkButton *draw, gpointer data) {
       if (isMaxYNan)
         *maxY = fmax(*maxY, p[i]);
     }
+    free(message);
   }
 
   // equal limits makes the line appear as if there is no drawing

@@ -8,12 +8,11 @@
 #define LINE_WIDTH 3.0
 #define PRECISION 0.25
 
-#define MAX_LABEL_SIZE 128
 #define WIDTH 800.0
 #define HEIGHT 600.0
 #define HELPER_DX 5.0
 #define HELPER_DY 5.0
-#define FONT_SIZE 16.0
+#define FONT_SIZE 14
 
 typedef struct {
   gboolean gridActive, helperActive;
@@ -23,7 +22,7 @@ typedef struct {
 
   gdouble minX, maxX, minY, maxY, helperX, helperY, *points;
 
-  gchar *eq, message[MAX_LABEL_SIZE];
+  gchar *eq;
 } gui_handler;
 
 void gui_handler_start_gui(int argc, char *argv[]);

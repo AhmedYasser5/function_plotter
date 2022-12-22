@@ -283,7 +283,7 @@ static void test_calculator_atolf() {
   // unknown characters at the end
   sprintf(eq + n, "%c", rand_char('a', 'z'));
   test_all_signs(eq, false, spaces_before, 0);
-  sprintf(eq + n, "\0");
+  sprintf(eq + n, "");
   printf("\ttest_bad_char_at_end succeeded\n");
   fflush(stdout);
 
@@ -298,12 +298,14 @@ static void test_calculator_atolf() {
   fflush(stdout);
 }
 
-static double test_error_code(const char *eq, char *dummy, double x, int ans) {
+static double test_error_code(const char *eq, double x, int ans) {
   if (isnan(x))
     x = rand_proper_double();
 
   double y;
-  char err = calculator_eval(eq, x, &y, dummy);
+  char *dummy = NULL;
+  char err = calculator_eval(eq, x, &y, &dummy);
+  free(dummy);
 
   assert(isnan(y) == !!ans && err == ans);
   return y;
@@ -314,71 +316,69 @@ static void test_calculator_eval() {
   fflush(stdout);
 
   char *eq = (char *)malloc(sizeof(char) * MAX_SIZE);
-  char *dummy = (char *)malloc(sizeof(char) * MAX_SIZE);
 
   // test error -2
   sprintf(eq, "x*3.3 *    ");
-  test_error_code(eq, dummy, NAN, -2);
+  test_error_code(eq, NAN, -2);
   printf("\ttest_error_-2 succeeded\n");
   fflush(stdout);
 
   // test error -1
   sprintf(eq, "3.3 * x 10.1");
-  test_error_code(eq, dummy, NAN, -1);
+  test_error_code(eq, NAN, -1);
   sprintf(eq, "10.1 x *");
-  test_error_code(eq, dummy, NAN, -1);
+  test_error_code(eq, NAN, -1);
   printf("\ttest_error_-1 succeeded\n");
   fflush(stdout);
 
   // test error 1
   sprintf(eq, "x / %lf", EPSILON / rand_int(2, 10000));
-  test_error_code(eq, dummy, NAN, 1);
+  test_error_code(eq, NAN, 1);
   printf("\ttest_error_1 succeeded\n");
   fflush(stdout);
 
   // test error 2
   sprintf(eq, "-x ^ 0.5");
-  test_error_code(eq, dummy, -5, 2);
+  test_error_code(eq, -5, 2);
   printf("\ttest_error_2 succeeded\n");
   fflush(stdout);
 
   sprintf(eq, "-2/3 * x^0.04 - x^0.2 - -8^2");
-  test_error_code(eq, dummy, -5, 2);
+  test_error_code(eq, -5, 2);
   printf("\ttest_error_2 succeeded\n");
   fflush(stdout);
 
   // test error 3
   sprintf(eq, "x**3.3");
-  test_error_code(eq, dummy, NAN, 3);
+  test_error_code(eq, NAN, 3);
   printf("\ttest_error_3 succeeded\n");
   fflush(stdout);
 
   // test error 4
   sprintf(eq, "x* u *3.3");
-  test_error_code(eq, dummy, NAN, 4);
+  test_error_code(eq, NAN, 4);
   printf("\ttest_error_4 succeeded\n");
   fflush(stdout);
 
   // test error 5
   sprintf(eq, "x*3...3");
-  test_error_code(eq, dummy, NAN, 5);
+  test_error_code(eq, NAN, 5);
   printf("\ttest_error_5 succeeded\n");
   fflush(stdout);
 
   // test a proper equation's result
   sprintf(eq, "2/-3 * x^-2 + x^3 - -8^2");
-  double y = test_error_code(eq, dummy, 5, 0);
+  double y = test_error_code(eq, 5, 0);
   assert(isequal(y, 14173.0 / 75));
   printf("\ttest_proper_equation_result succeeded\n");
   fflush(stdout);
 
   sprintf(eq, "-2/3 * x^2 - x^3 + -8^2");
-  y = test_error_code(eq, dummy, 5, 0);
+  y = test_error_code(eq, 5, 0);
   assert(isequal(y, -617.0 / 3));
   printf("\ttest_proper_equation_result succeeded\n");
   fflush(stdout);
 
-  free(dummy);
   free(eq);
   printf("test_calculator_eval() succeeded\n");
   fflush(stdout);

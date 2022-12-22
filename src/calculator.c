@@ -13,6 +13,19 @@ static const char deps[OPS][OPS] = {{'+', '-', '*', '/', '^'},
                                     {'*', '/', '^'},
                                     {}};
 
+typedef int (*safePrintFunc)(char *, int, va_list);
+static char *safeSprintf(safePrintFunc vfunc, ...) {
+  va_list args1, args2;
+  va_start(args1, vfunc);
+  va_copy(args2, args1);
+  int sz = vfunc(NULL, 0, args1) + 1;
+  va_end(args1);
+  char *message = (char *)malloc(sizeof(char) * sz);
+  vfunc(message, sz, args2);
+  va_end(args2);
+  return message;
+}
+
 /* does only one operation using an operator from the top of the stack along
  * with two numbers from the other stack. It returns a non-zero integer if it
  * finds an error */
@@ -49,16 +62,17 @@ char calc(stack_char **op, stack_double **num) {
 }
 
 /* puts the correct message corresponding to the error code given */
-static char calc_error(char *message, char err) {
+static int calc_error(char *message, int size, va_list args) {
+  int err = va_arg(args, int);
   if (err == -2)
-    sprintf(message, "An extra operation was detected at the end");
-  else if (err == 1)
-    sprintf(message, "A Division by zero was detected");
-  else if (err == 2)
-    sprintf(message, "A fractional power for negative numbers was detected");
-  else
-    sprintf(message, "An unknown error was detected");
-  return err;
+    return snprintf(message, size,
+                    "An extra operation was detected at the end");
+  if (err == 1)
+    return snprintf(message, size, "A Division by zero was detected");
+  if (err == 2)
+    return snprintf(message, size,
+                    "A fractional power for negative numbers was detected");
+  return snprintf(message, size, "An unknown error was detected");
 }
 
 /* reads a number (integers and doubles) */
@@ -70,7 +84,7 @@ static double parse_number(const char *arr, int *i) {
     (*i)++;
   }
 
-  if (arr[*i] == '.') {
+  if (arr[*i] == DECIMAL_POINT) {
     (*i)++;
     double pre = 1;
     while (arr[*i] >= '0' && arr[*i] <= '9') {
@@ -114,66 +128,100 @@ double calculator_atolf(const char *snum) {
   return NAN; // unwanted characters detected at the end
 }
 
+static int stripFromSize(int *remainingSize, int len) {
+  if (*remainingSize != 0) {
+    *remainingSize = (int)fmax(0, *remainingSize - len);
+    return len;
+  }
+  return 0;
+}
+
+static char *getStartOfString(char *message, int offset) {
+  if (!offset)
+    return message;
+  return message + offset;
+}
+
 /* processes the error message of "double numbers error" */
-static void double_nums_error(char *message, const char *arr, int i,
-                              const int size) {
-  int n = sprintf(message, "Double numbers were detected here: ...");
+static int double_nums_error(char *message, int size, va_list args) {
+  const char *arr = va_arg(args, const char *);
+  int i = va_arg(args, int);
+  const int arrSize = va_arg(args, const int);
+  int len = snprintf(message, size, "Double numbers were detected here: ...");
+  int offset = stripFromSize(&size, len);
 
   for (int js = (int)fmax(i - THRESHB, 0),
-           je = (int)fmin(size - 1, i + THRESHF);
+           je = (int)fmin(arrSize - 1, i + THRESHF);
        js <= je; js++) {
-    sprintf(message + n, "%c", arr[js]);
-    n++;
+    len += snprintf(getStartOfString(message, offset), size, "%c", arr[js]);
+    offset += stripFromSize(&size, len - offset);
   }
 
-  sprintf(message + n, " ...");
+  len += snprintf(getStartOfString(message, offset), size, " ...");
+  return len;
 }
 
 /* processes the error message of "double operators error" */
-static void double_op_error(char *message, char last_op, const char *arr, int i,
-                            const int size) {
-  int n = sprintf(message, "Double operations \"%c%c\" were detected here: ...",
-                  last_op, arr[i]);
+static int double_op_error(char *message, int size, va_list args) {
+  char last_op = (char)va_arg(args, int);
+  const char *arr = va_arg(args, const char *);
+  int i = va_arg(args, int);
+  const int arrSize = va_arg(args, const int);
+  int len = snprintf(message, size,
+                     "Double operations \"%c%c\" were detected here: ...",
+                     last_op, arr[i]);
+  int offset = stripFromSize(&size, len);
 
   for (int js = (int)fmax(i - 1 - THRESHB, 0),
-           je = (int)fmin(size - 1, i + THRESHF - 1);
+           je = (int)fmin(arrSize - 1, i + THRESHF - 1);
        js <= je; js++) {
-    sprintf(message + n, "%c", arr[js]);
-    n++;
+    len += snprintf(getStartOfString(message, offset), size, "%c", arr[js]);
+    offset += stripFromSize(&size, len - offset);
   }
 
-  sprintf(message + n, " ...");
+  len += snprintf(getStartOfString(message, offset), size, " ...");
+  return len;
 }
 
 /* processes the error message of "undefined character error" */
-static void undefined_char_error(char *message, const char *arr, int i,
-                                 const int size) {
-  int n = sprintf(
-      message, "An undefined character '%c' was detected here: ... ", arr[i]);
+static int undefined_char_error(char *message, int size, va_list args) {
+  const char *arr = va_arg(args, const char *);
+  int i = va_arg(args, int);
+  const int arrSize = va_arg(args, const int);
+  int len =
+      snprintf(message, size,
+               "An undefined character '%c' was detected here: ... ", arr[i]);
+  int offset = stripFromSize(&size, len);
 
   for (int js = (int)fmax(i - THRESHB, 0),
-           je = (int)fmin(size - 1, i + THRESHF);
+           je = (int)fmin(arrSize - 1, i + THRESHF);
        js <= je; js++) {
-    sprintf(message + n, "%c", arr[js]);
-    n++;
+    len += snprintf(getStartOfString(message, offset), size, "%c", arr[js]);
+    offset += stripFromSize(&size, len - offset);
   }
 
-  sprintf(message + n, " ...");
+  len += snprintf(getStartOfString(message, offset), size, " ...");
+  return len;
 }
 
 /* processes the error message of "double decimal points error" */
-static void double_decimal_error(char *message, const char *arr, int i,
-                                 const int size) {
-  int n = sprintf(message, "Two decimal points were detected here: ... ");
+static int double_decimal_error(char *message, int size, va_list args) {
+  const char *arr = va_arg(args, const char *);
+  int i = va_arg(args, int);
+  const int arrSize = va_arg(args, const int);
+  int len =
+      snprintf(message, size, "Two decimal points were detected here: ... ");
+  int offset = stripFromSize(&size, len);
 
   for (int js = (int)fmax(i - THRESHB, 0),
-           je = (int)fmin(size - 1, i + THRESHF);
+           je = (int)fmin(arrSize - 1, i + THRESHF);
        js <= je; js++) {
-    sprintf(message + n, "%c", arr[js]);
-    n++;
+    len += snprintf(getStartOfString(message, offset), size, "%c", arr[js]);
+    offset += stripFromSize(&size, len - offset);
   }
 
-  sprintf(message + n, " ...");
+  len += snprintf(getStartOfString(message, offset), size, " ...");
+  return len;
 }
 
 /* processes the dependencies of the new operator and adds it to the stack */
@@ -275,7 +323,7 @@ static char process_num(const char *arr, int *i, char *last_op, stack_char **op,
 
 /* the main function that evaluates a function at a given x, while detecting
  * errors */
-char calculator_eval(const char *arr, double x, double *ans, char *message) {
+char calculator_eval(const char *arr, double x, double *ans, char **message) {
 #define clear_all()                                                            \
   stack_char_clear(&op);                                                       \
   stack_double_clear(&num);
@@ -325,15 +373,15 @@ char calculator_eval(const char *arr, double x, double *ans, char *message) {
 
     // handling different errors
     if (ret == -1)
-      double_nums_error(message, arr, i, size);
+      *message = safeSprintf(double_nums_error, arr, i, size);
     else if (ret == 3)
-      double_op_error(message, last_op, arr, i, size);
+      *message = safeSprintf(double_op_error, (int)last_op, arr, i, size);
     else if (ret == 4)
-      undefined_char_error(message, arr, i, size);
+      *message = safeSprintf(undefined_char_error, arr, i, size);
     else if (ret == 5)
-      double_decimal_error(message, arr, i + 1, size);
+      *message = safeSprintf(double_decimal_error, arr, i + 1, size);
     else
-      calc_error(message, ret);
+      *message = safeSprintf(calc_error, ret);
     *ans = NAN;
     clear_all();
     return ret;
@@ -343,7 +391,7 @@ char calculator_eval(const char *arr, double x, double *ans, char *message) {
   while (op || num->next) {
     char ret = calc(&op, &num);
     if (ret) {
-      calc_error(message, ret);
+      *message = safeSprintf(calc_error, ret);
       *ans = NAN;
       clear_all();
       return ret;
@@ -351,7 +399,8 @@ char calculator_eval(const char *arr, double x, double *ans, char *message) {
   }
 
   *ans = num->top;
-  sprintf(message, "");
+  *message = (char *)malloc(sizeof(char));
+  **message = '\0';
   clear_all();
   return 0;
 #undef clear_all
