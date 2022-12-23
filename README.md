@@ -36,7 +36,7 @@ You can also run compilation separately from running by creating an executable f
 make RELEASE=1
 
 # Running
-./Function_Plotter.exe
+./Function_Plotter_Release.exe
 ```
 
 ## Examples
