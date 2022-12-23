@@ -162,7 +162,7 @@ static void test_stack_double_clear() {
   fflush(stdout);
 }
 
-char calc(stack_char **op, stack_double **num);
+char calc(stack_char **restrict op, stack_double **restrict num);
 #define OPS 5
 static const char ops[OPS] = {'+', '-', '*', '/', '^'};
 
@@ -240,7 +240,7 @@ static void test_calc() {
 #undef clear_all
 }
 
-static void test_all_signs(char *eq, char ans, int start, int from) {
+static void test_all_signs(char *restrict eq, char ans, int start, int from) {
   char old = eq[start];
   assert(isnan(calculator_atolf(eq + from)) == !ans);
   eq[start] = '+';
@@ -298,7 +298,7 @@ static void test_calculator_atolf() {
   fflush(stdout);
 }
 
-static double test_error_code(const char *eq, double x, int ans) {
+static double test_error_code(const char *restrict eq, double x, int ans) {
   if (isnan(x))
     x = rand_proper_double();
 

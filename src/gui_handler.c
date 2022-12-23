@@ -8,7 +8,7 @@
 /* unrefs any created widgets */
 void on_destroy() { gtk_main_quit(); }
 
-static char *safeSprintf(const char *format, ...) {
+static char *safeSprintf(const char *restrict format, ...) {
   va_list args1, args2;
   va_start(args1, format);
   va_copy(args2, args1);
@@ -21,7 +21,8 @@ static char *safeSprintf(const char *format, ...) {
 }
 
 /* prints errors in red color */
-static void print_label_error(GtkWidget *messages, const char *message) {
+static void print_label_error(GtkWidget *restrict messages,
+                              const char *restrict message) {
   char *output = safeSprintf(
       "<span font=\"Sans %d\" weight=\"semibold\" color=\"#FF0000\">%s</span>",
       FONT_SIZE, message);
@@ -30,7 +31,8 @@ static void print_label_error(GtkWidget *messages, const char *message) {
 }
 
 /* prints information in default color */
-static void print_label_info(GtkWidget *messages, const char *message) {
+static void print_label_info(GtkWidget *restrict messages,
+                             const char *restrict message) {
   char *output =
       safeSprintf("<span font=\"Sans %d\" weight=\"semibold\">%s</span>",
                   FONT_SIZE, message);
@@ -39,22 +41,25 @@ static void print_label_info(GtkWidget *messages, const char *message) {
 }
 
 /* toggles the appearance of the grid */
-void on_toggle_grid_toggled(GtkToggleButton *toggle_grid, gpointer data) {
+void on_toggle_grid_toggled(GtkToggleButton *restrict toggle_grid,
+                            gpointer data) {
   gui_handler *handler = data;
   handler->gridActive = gtk_toggle_button_get_active(toggle_grid);
   gtk_widget_queue_draw(handler->grid);
 }
 
 /* toggles the appearance of the helper */
-void on_toggle_helper_toggled(GtkToggleButton *toggle_helper, gpointer data) {
+void on_toggle_helper_toggled(GtkToggleButton *restrict toggle_helper,
+                              gpointer data) {
   gui_handler *handler = data;
   handler->helperActive = gtk_toggle_button_get_active(toggle_helper);
   gtk_widget_queue_draw(handler->helper);
 }
 
 /* converts real coordinates from gui coordinates */
-static gdouble convert_to_display(gdouble p, const gdouble *min,
-                                  const gdouble *max, const guint len) {
+static gdouble convert_to_display(gdouble p, const gdouble *restrict min,
+                                  const gdouble *restrict max,
+                                  const guint len) {
   p -= *min;
   p *= len;
   p /= *max - *min;
@@ -62,8 +67,9 @@ static gdouble convert_to_display(gdouble p, const gdouble *min,
 }
 
 /* converts gui coordinates to real coordinates */
-static gdouble convert_from_display(gdouble p, const gdouble *min,
-                                    const gdouble *max, const guint len) {
+static gdouble convert_from_display(gdouble p, const gdouble *restrict min,
+                                    const gdouble *restrict max,
+                                    const guint len) {
   p *= *max - *min;
   p /= len;
   p += *min;
@@ -71,7 +77,7 @@ static gdouble convert_from_display(gdouble p, const gdouble *min,
 }
 
 /* tracks the mouse in the helper */
-static gboolean mouse_tracking(gui_handler *handler) {
+static gboolean mouse_tracking(gui_handler *restrict handler) {
   // make sure the helper is turned on
   if (handler->eq == NULL || !handler->helperActive)
     return FALSE;
@@ -113,7 +119,8 @@ static gboolean mouse_tracking(gui_handler *handler) {
 }
 
 /* tracks mouse clicks in the helper */
-gboolean on_helper_button_press_event(GtkWidget *widget, GdkEventButton *event,
+gboolean on_helper_button_press_event(GtkWidget *restrict widget,
+                                      GdkEventButton *restrict event,
                                       gpointer data) {
   // make sure it is a left click of the mouse
   if (event->button != 1)
@@ -125,7 +132,8 @@ gboolean on_helper_button_press_event(GtkWidget *widget, GdkEventButton *event,
 }
 
 /* tracks mouse motion (while clicked) in the helper */
-gboolean on_helper_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
+gboolean on_helper_motion_notify_event(GtkWidget *restrict widget,
+                                       GdkEventMotion *restrict event,
                                        gpointer data) {
   gui_handler *handler = data;
   // make sure it is a left click of the mouse, and the last point is somewhere
@@ -140,7 +148,8 @@ gboolean on_helper_motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
 }
 
 /* draws moving axes to identify the point on the graph */
-gboolean on_helper_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
+gboolean on_helper_draw(GtkWidget *restrict widget, cairo_t *restrict cr,
+                        gpointer data) {
   gui_handler *handler = data;
   // make sure the helper is turned on
   if (isnan(handler->helperX) || !handler->helperActive)
@@ -164,7 +173,8 @@ gboolean on_helper_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
 }
 
 /* draws static axes to identify the ranges of x and y axes */
-gboolean on_grid_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
+gboolean on_grid_draw(GtkWidget *restrict widget, cairo_t *restrict cr,
+                      gpointer data) {
   gui_handler *handler = data;
 
   // make sure the grid is turned on
@@ -220,7 +230,8 @@ gboolean on_grid_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
 }
 
 /* draws the given equation */
-gboolean on_graph_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
+gboolean on_graph_draw(GtkWidget *restrict widget, cairo_t *restrict cr,
+                       gpointer data) {
   gui_handler *handler = data;
 
   if (handler->eq == NULL)
@@ -252,8 +263,9 @@ gboolean on_graph_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
 }
 
 /* handles different errors in the ranges of x and y given in entry boxes */
-static char set_min_max(GtkWidget *min, GtkWidget *max, gdouble *min_co,
-                        gdouble *max_co, const int c, GtkWidget *messages) {
+static char set_min_max(GtkWidget *restrict min, GtkWidget *restrict max,
+                        gdouble *restrict min_co, gdouble *restrict max_co,
+                        const int c, GtkWidget *restrict messages) {
   char state = 0;
 
   // read Minimum x or y
@@ -312,7 +324,7 @@ static char set_min_max(GtkWidget *min, GtkWidget *max, gdouble *min_co,
 }
 
 /* prepares data to be drawn on the graph */
-void on_draw_clicked(GtkButton *draw, gpointer data) {
+void on_draw_clicked(GtkButton *restrict draw, gpointer data) {
   gui_handler *handler = data;
 
   GtkWidget *min_x = handler->min_x, *max_x = handler->max_x,
@@ -341,17 +353,15 @@ void on_draw_clicked(GtkButton *draw, gpointer data) {
 
   const gchar *originalEq = gtk_entry_get_text(GTK_ENTRY(handler->equation));
 
-  if (handler->eq)
-    free(handler->eq);
+  free(handler->eq);
   handler->eq = (char *)malloc(sizeof(char) * strlen(originalEq) + 1);
 
-  gchar *eq = handler->eq;
-  strcpy(eq, originalEq);
+  strcpy(handler->eq, originalEq);
 #if DEBUG == 1
-  printf("function = %s\n", eq);
+  printf("function = %s\n", handler->eq);
 #endif
 
-  if (!strcmp(eq, "")) {
+  if (!strcmp(handler->eq, "")) {
     print_label_error(messages, "Function cannot be empty");
     return;
   }
@@ -362,7 +372,7 @@ void on_draw_clicked(GtkButton *draw, gpointer data) {
   for (int i = 0, n = WIDTH / PRECISION; i < n; i++, cur += step) {
     // calculating the corresponding y for x = cur
     char *message = NULL;
-    calculator_eval(eq, cur, p + i, &message);
+    calculator_eval(handler->eq, cur, p + i, &message);
 
     if (isnan(p[i])) { // handling errors
       print_label_error(messages, message);
@@ -452,7 +462,6 @@ void gui_handler_start_gui(int argc, char *argv[]) {
   gtk_main();
 
   // freeing manually allocated memory
-  if (handler.eq)
-    free(handler.eq);
+  free(handler.eq);
   free(handler.points);
 }

@@ -1,5 +1,6 @@
 #include "calculator.h"
 #include "stack.h"
+#include <ctype.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +14,7 @@ static const char deps[OPS][OPS] = {{'+', '-', '*', '/', '^'},
                                     {'*', '/', '^'},
                                     {}};
 
-typedef int (*safePrintFunc)(char *, int, va_list);
+typedef int (*safePrintFunc)(char *restrict, int, va_list);
 static char *safeSprintf(safePrintFunc vfunc, ...) {
   va_list args1, args2;
   va_start(args1, vfunc);
@@ -29,7 +30,7 @@ static char *safeSprintf(safePrintFunc vfunc, ...) {
 /* does only one operation using an operator from the top of the stack along
  * with two numbers from the other stack. It returns a non-zero integer if it
  * finds an error */
-char calc(stack_char **op, stack_double **num) {
+char calc(stack_char **restrict op, stack_double **restrict num) {
   if (!*op)
     return -1; // op stack is empty
   if (!(*num && (*num)->next))
@@ -62,7 +63,7 @@ char calc(stack_char **op, stack_double **num) {
 }
 
 /* puts the correct message corresponding to the error code given */
-static int calc_error(char *message, int size, va_list args) {
+static int calc_error(char *restrict message, int size, va_list args) {
   int err = va_arg(args, int);
   if (err == -2)
     return snprintf(message, size,
@@ -76,7 +77,7 @@ static int calc_error(char *message, int size, va_list args) {
 }
 
 /* reads a number (integers and doubles) */
-static double parse_number(const char *arr, int *i) {
+static double parse_number(const char *restrict arr, int *restrict i) {
   double y = 0;
   while (arr[*i] >= '0' && arr[*i] <= '9') {
     y *= 10;
@@ -100,10 +101,10 @@ static double parse_number(const char *arr, int *i) {
 }
 
 /* converts a char array into a double */
-double calculator_atolf(const char *snum) {
+double calculator_atolf(const char *restrict snum) {
   int i = 0;
   // ignore whitespaces
-  while (snum[i] == ' ')
+  while (isblank(snum[i]))
     i++;
 
   char op = '+';
@@ -119,7 +120,7 @@ double calculator_atolf(const char *snum) {
 
   // ignore whitespaces
   i++;
-  while (snum[i] == ' ')
+  while (isblank(snum[i]))
     i++;
 
   if (snum[i] == '\0')
@@ -128,7 +129,7 @@ double calculator_atolf(const char *snum) {
   return NAN; // unwanted characters detected at the end
 }
 
-static int stripFromSize(int *remainingSize, int len) {
+static int stripFromSize(int *restrict remainingSize, int len) {
   if (*remainingSize != 0) {
     *remainingSize = (int)fmax(0, *remainingSize - len);
     return len;
@@ -136,15 +137,15 @@ static int stripFromSize(int *remainingSize, int len) {
   return 0;
 }
 
-static char *getStartOfString(char *message, int offset) {
+static char *getStartOfString(char *restrict message, int offset) {
   if (!offset)
     return message;
   return message + offset;
 }
 
 /* processes the error message of "double numbers error" */
-static int double_nums_error(char *message, int size, va_list args) {
-  const char *arr = va_arg(args, const char *);
+static int double_nums_error(char *restrict message, int size, va_list args) {
+  const char *arr = va_arg(args, const char *restrict);
   int i = va_arg(args, int);
   const int arrSize = va_arg(args, const int);
   int len = snprintf(message, size, "Double numbers were detected here: ...");
@@ -162,9 +163,9 @@ static int double_nums_error(char *message, int size, va_list args) {
 }
 
 /* processes the error message of "double operators error" */
-static int double_op_error(char *message, int size, va_list args) {
+static int double_op_error(char *restrict message, int size, va_list args) {
   char last_op = (char)va_arg(args, int);
-  const char *arr = va_arg(args, const char *);
+  const char *arr = va_arg(args, const char *restrict);
   int i = va_arg(args, int);
   const int arrSize = va_arg(args, const int);
   int len = snprintf(message, size,
@@ -184,8 +185,9 @@ static int double_op_error(char *message, int size, va_list args) {
 }
 
 /* processes the error message of "undefined character error" */
-static int undefined_char_error(char *message, int size, va_list args) {
-  const char *arr = va_arg(args, const char *);
+static int undefined_char_error(char *restrict message, int size,
+                                va_list args) {
+  const char *arr = va_arg(args, const char *restrict);
   int i = va_arg(args, int);
   const int arrSize = va_arg(args, const int);
   int len =
@@ -205,8 +207,9 @@ static int undefined_char_error(char *message, int size, va_list args) {
 }
 
 /* processes the error message of "double decimal points error" */
-static int double_decimal_error(char *message, int size, va_list args) {
-  const char *arr = va_arg(args, const char *);
+static int double_decimal_error(char *restrict message, int size,
+                                va_list args) {
+  const char *arr = va_arg(args, const char *restrict);
   int i = va_arg(args, int);
   const int arrSize = va_arg(args, const int);
   int len =
@@ -225,8 +228,8 @@ static int double_decimal_error(char *message, int size, va_list args) {
 }
 
 /* processes the dependencies of the new operator and adds it to the stack */
-static char process_op(char arr_i, char *last_op, stack_char **op,
-                       stack_double **num) {
+static char process_op(char arr_i, char *restrict last_op,
+                       stack_char **restrict op, stack_double **restrict num) {
   // identifying the new operator
   char type = 0;
   for (int j = 0; j < OPS; j++)
@@ -292,8 +295,9 @@ static char process_op(char arr_i, char *last_op, stack_char **op,
 
 /* this function is similar to atolf, but handles errors as expected from
  * calculator_eval() point of view */
-static char process_num(const char *arr, int *i, char *last_op, stack_char **op,
-                        stack_double **num) {
+static char process_num(const char *restrict arr, int *restrict i,
+                        char *restrict last_op, stack_char **restrict op,
+                        stack_double **restrict num) {
   if (arr[*i] != '.' && (arr[*i] < '0' || arr[*i] > '9'))
     return 4; // undefined character error
 
@@ -323,7 +327,8 @@ static char process_num(const char *arr, int *i, char *last_op, stack_char **op,
 
 /* the main function that evaluates a function at a given x, while detecting
  * errors */
-char calculator_eval(const char *arr, double x, double *ans, char **message) {
+char calculator_eval(const char *restrict arr, double x, double *restrict ans,
+                     char **restrict message) {
 #define clear_all()                                                            \
   stack_char_clear(&op);                                                       \
   stack_double_clear(&num);

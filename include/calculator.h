@@ -7,5 +7,6 @@
 #define THRESHB 7
 #define DECIMAL_POINT '.'
 
-double calculator_atolf(const char *snum);
-char calculator_eval(const char *arr, double x, double *ans, char **message);
+double calculator_atolf(const char *restrict snum);
+char calculator_eval(const char *restrict arr, double x, double *restrict ans,
+                     char **restrict message);

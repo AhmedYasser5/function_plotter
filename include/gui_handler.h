@@ -17,12 +17,25 @@
 typedef struct {
   gboolean gridActive, helperActive;
 
-  GtkWidget *window, *fixed, *graph, *draw, *helper, *grid, *min_x, *max_x,
-      *min_y, *max_y, *equation, *messages, *toggle_grid, *toggle_helper;
+  GtkWidget *restrict window;
+  GtkWidget *restrict fixed;
+  GtkWidget *restrict graph;
+  GtkWidget *restrict draw;
+  GtkWidget *restrict helper;
+  GtkWidget *restrict grid;
+  GtkWidget *restrict min_x;
+  GtkWidget *restrict max_x;
+  GtkWidget *restrict min_y;
+  GtkWidget *restrict max_y;
+  GtkWidget *restrict equation;
+  GtkWidget *restrict messages;
+  GtkWidget *restrict toggle_grid;
+  GtkWidget *restrict toggle_helper;
 
-  gdouble minX, maxX, minY, maxY, helperX, helperY, *points;
+  gdouble minX, maxX, minY, maxY, helperX, helperY;
+  gdouble *restrict points;
 
-  gchar *eq;
+  gchar *restrict eq;
 } gui_handler;
 
 void gui_handler_start_gui(int argc, char *argv[]);
